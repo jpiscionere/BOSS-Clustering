@@ -70,7 +70,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	int  cap_counter=0;
 	int count=0,flag=0;
 	double *x,*y,*z;
-	double min_weight=0.6;
+	double min_weight=0.75;
 
 
 
@@ -267,9 +267,10 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
                 sect_center_ra[i]=atan2(yaverage[i],xaverage[i]);
 		if(sect_center_ra[i] < 0)
 			sect_center_ra[i] =2.0*PI + sect_center_ra[i];
-		sect_center_ra[i]=180./PI*sect_center_ra[i];
-                sect_center_dec[i]=90.- 180./PI * acos(zaverage[i]/SQRT(SQR(xaverage[i]) + SQR(yaverage[i]) + SQR(zaverage[i])));
-
+		sect_center_ra[i]=180./PI*sect_center_ra[i]; 
+		sect_center_dec[i]=90.- 180./PI * acos(zaverage[i]/SQRT(SQR(xaverage[i]) + SQR(yaverage[i]) + SQR(zaverage[i])));
+		if(xaverage[i] < -10000.0)
+			fprintf(stderr,"%d %lf\n",unique_ids[i],sector_weight[i]);
         }
 
 
