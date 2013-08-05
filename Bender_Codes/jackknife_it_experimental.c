@@ -7,7 +7,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include "sglib.h"
-
+#include "utils.h"
+#define MAXBUFSIZE    (10000)
 #define PI (3.141592)
 #include <string.h>
 #define SQR(x) ((x)*(x))
@@ -97,6 +98,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
 	double min_weight=0.75;
 
+	char buffer[MAXBUFSIZE];
 
 
 	polygons_tag = malloc(9*sizeof(char));
@@ -109,21 +111,27 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   	single_tag = malloc(2*sizeof(char));
   	pixel_tag = malloc(7*sizeof(char));
 
-	fp1=fopen(Polygon_File,"r");
-        assert(fp1!=NULL);	
-	fscanf(fp1,"%d %s\n",&n_masks,polygons_tag);
-	fprintf(stderr,"jackknife_it> There are %d masks.\n",n_masks);
 
 
-	int *mask_id,pixel,n_circ;
+	fp1=my_fopen(Polygon_File,"r");
+  	fscanf(fp1,"%d %s\n",&n_masks,polygons_tag);
+  	fprintf(stderr,"jackknife_it> There are %d masks.\n",n_masks);
+
+
+
+
+	int *mask_id,pixel,n_circ,nitems,nread;
 
 	double *weight,*area;
 
 	double x_poly,y_poly,z_poly,dot_poly;
 
-	area=(double *)calloc(n_masks,sizeof(double));
-	weight=(double *)calloc(n_masks,sizeof(double));
-	mask_id=(int *)calloc(n_masks,sizeof(int));
+	area=my_calloc(sizeof(*area),n_masks);
+  	weight=my_calloc(sizeof(*weight),n_masks);
+  	mask_id=my_calloc(sizeof(*mask_id),n_masks);
+
+
+
 
 
 	char check[100];
@@ -133,7 +141,44 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
 
 	i=0;
+	nitems = 10;
 	
+	fgets(buffer,MAXBUFSIZE,fp1);
+  	nread=sscanf(buffer,"%d %s %d %s %lf %s %d %s %lf %s",
+               &mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag);
+  	assert(nread==nitems);
+
+  	if(strncmp("str):",str_tag,5)!=0)  {
+    		fprintf(stderr,"jackknife_it> str_tag = %s\n",str_tag);
+    		fprintf(stderr,"jackknife_it> You are using a different format than I expected.\n");
+    		fprintf(stderr,"jackknife_it> You are missing a field.  I cannot fix this. You have asked too much of me.\n");
+
+    		return ;
+  	}
+
+
+
+	for(k=0;k<n_circ;k++) {
+    		fgets(buffer,MAXBUFSIZE,fp1);
+  	}
+
+  	nitems=11;
+  
+  	for(i=1;i<n_masks;i++) {
+
+	fgets(buffer,MAXBUFSIZE,fp1);
+    		nread=sscanf(buffer,"%s %d %s %d %s %lf %s %d %s %lf %s",
+           		polygon_tag,&mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag);
+	 assert(nread==nitems);
+
+	    for(k=0;k<n_circ;k++) {
+      		fgets(buffer,MAXBUFSIZE,fp1);
+    		}
+  	}
+
+
+
+/*	
 	fscanf(fp1,"%d %s %d %s %lf %s %d %s %lf %s",
                         &mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag);	
 	
@@ -166,7 +211,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 				}	
 		}
 
-
+*/
 	
 
 	double *sector_area,*sector_weight;
