@@ -262,14 +262,14 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
     	for(i=0;i<n_unique_ids;i++){
                 for(j=0;j<Ngal;j++){
-                        if(Galaxy_Sector_Ids[j]==unique_ids[i]){
-                       		gal_check++;         
+//                        if(Galaxy_Sector_Ids[j]==unique_ids[i]){
+//                       		gal_check++;         
 				xaverage[i]+=x[j];
                                 yaverage[i]+=y[j];
                                 zaverage[i]+=z[j];
                                 flag++;
 
-                        }
+//                        }
                 }
 
                 xaverage[i]/=flag;
@@ -277,11 +277,11 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
                 zaverage[i]/=flag;
 
                 flag=0;
-		if(gal_check==0){
-			fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
-       			unique_ids[i]=-1;
-		}
-		gal_check=0;	
+//		if(gal_check==0){
+//			fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
+//       			unique_ids[i]=-1;
+//		}
+//		gal_check=0;	
 		
 	}
 
@@ -318,7 +318,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	SGLIB_ARRAY_QUICK_SORT(double,sect_center_ra, n_unique_ids, SGLIB_NUMERIC_COMPARATOR , MULTIPLE_ARRAY_EXCHANGER);
 
 	for(i=0;i<n_unique_ids;i++){
-		if(unique_ids[i] >=0)
+//		if(unique_ids[i] >=0)
                 	*area_tot+=sector_area[i];
         }
 	
@@ -337,7 +337,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
  
       for(j=0;j<n_dec_bins;j++){
 		for(i=0;i<n_unique_ids;i++){
-			if((sect_center_dec[i] >=(dec_min + j*dec_bins_size)) && (sect_center_dec[i] < (dec_min + (j+1)*dec_bins_size)) && (unique_ids[i]> -1) ){
+			if((sect_center_dec[i] >=(dec_min + j*dec_bins_size)) && (sect_center_dec[i] < (dec_min + (j+1)*dec_bins_size)) ){
 
 				*area_tot+=sector_area[i];
                 		jackknife_number[i]=(int)floor(*area_tot/area_bin);
