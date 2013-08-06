@@ -190,7 +190,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	zaverage=(double *)calloc(n_masks,sizeof(double));
 
 
-
+	double dec_max=65.,dec_min=-4.;
 	int n_unique_ids=0;
 	flag=0;
 	count=0;
@@ -301,6 +301,14 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 			sect_center_ra[i]=180./PI*sect_center_ra[i]; 
 			sect_center_dec[i]=90.- 180./PI * acos(zaverage[i]/SQRT(SQR(xaverage[i]) + SQR(yaverage[i]) + SQR(zaverage[i])));
 
+			if(dec_min > sect_center_dec[i])
+                		dec_min = sect_center_dec[i];
+        		if(dec_max < sect_center_dec[i])
+                		dec_max = sect_center_dec[i];
+
+
+
+
 
         }
 
@@ -327,7 +335,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	fprintf(stderr,"Total area = %lf, Jackknife area=%lf\n",*area_tot,area_bin);
 
 	*area_tot=0;
-	double dec_max=65.,dec_min=-4.;
+
 	int n_dec_bins=floor(SQRT(N_Jackknife));
 	double dec_bins_size=(dec_max-dec_min)/n_dec_bins;
 	fprintf(stderr,"n_dec_bins=%d\n",n_dec_bins);       
