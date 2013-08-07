@@ -2,9 +2,27 @@
 
 
 
-#define MAXBUFSIZE    (1000)
-#include "jackknife_it.h"
-/*
+#define DEG_TO_RAD      (0.01745328888)
+#define RAD_TO_DEG      (57.2957914331)
+
+#define MAXBUFSIZE    (10000)
+#include "utils.h"
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include "sglib.h"
+
+#define PI (3.141592)
+#include <string.h>
+#define SQR(x) ((x)*(x))
+#define SQRT(x) (pow(x,0.5))
+
+
+
+
+
+
 int main()
 {
 
@@ -22,6 +40,7 @@ ra=(double *)calloc(Nmax,sizeof(double));
 dec=(double *)calloc(Nmax,sizeof(double));
 weight=(double *)calloc(Nmax,sizeof(double));
 
+void jackknife_it(int , char * , int * , int * , int , double * , double * , double * );
 
 
         while(fscanf(stdin,"%lf %lf %lf %lf %d",&ra[Ngal],&dec[Ngal],&trash,&weight[Ngal],&Sector_ids[Ngal])!=EOF){
@@ -30,11 +49,45 @@ weight=(double *)calloc(Nmax,sizeof(double));
         }
 
 
-         double *x,*y,*z;
+        for(i=0;i<Ngal;i++)
+                Jackknife_ids[i]=-1;
+
+        fprintf(stderr,"Ngal=%d\n",Ngal);
+
+        snprintf(Polygon_File,500,"/data2/jap/Clustering/Boss/dr11/mask-cmass-dr11v0-N-Anderson.ply");
+
+
+        jackknife_it(160,Polygon_File,Sector_ids,Jackknife_ids,Ngal,ra,dec,&area_tot);
+
+        for(i=0;i<Ngal;i++)
+                fprintf(stdout,"%lf %lf %d %d\n",ra[i],dec[i],Sector_ids[i],Jackknife_ids[i]);
+
+
+return 0;
+}
 
 
 
 
+
+void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *ra, double *dec, double *area_tot)
+
+{
+
+  fprintf(stderr,"jackknife_it> In Jackknife Function\n");
+	
+  int Nmax=1E8;
+  int n_masks;
+  int i=0,j=0,k=0;
+  char *polygons_tag,*polygon_tag,*single_tag,*caps_tag, *weight_tag, *str_tag,*pixel_tag;	
+  FILE *fp1;
+  int  cap_counter=0;
+  int count=0,flag=0;
+  int nitems,nread;
+  char buffer[MAXBUFSIZE];
+
+  double min_weight=0.6; 
+  double *x,*y,*z;
         x=(double *)calloc(Ngal,sizeof(double));
         y=(double *)calloc(Ngal,sizeof(double));
         z=(double *)calloc(Ngal,sizeof(double));
@@ -55,53 +108,16 @@ weight=(double *)calloc(Nmax,sizeof(double));
 
 
 
-        for(i=0;i<Ngal;i++)
-                Jackknife_ids[i]=-1;
-        
-        fprintf(stderr,"Ngal=%d\n",Ngal);
-
-        snprintf(Polygon_File,500,"/data2/jap/Clustering/Boss/dr11/mask-cmass-dr11v0-N-Anderson.ply");
 
 
-        jackknife_it(160,Polygon_File,Sector_ids,Jackknife_ids,Ngal,ra,dec,&area_tot,x,y,z);
-
-        for(i=0;i<Ngal;i++)
-                fprintf(stdout,"%lf %lf %d %d\n",ra[i],dec[i],Sector_ids[i],Jackknife_ids[i]);  
 
 
-return 0;
-}
 
 
-*/
 
 
-void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *ra, double *dec, double *area_tot,
-		  double *x,double *y,double *z)
-{
 
-  fprintf(stderr,"jackknife_it> In Jackknife Function\n");
-	
-  int Nmax=1E6;
-  int n_masks;
-  int i=0,j=0,k=0;
-  char *polygons_tag,*polygon_tag,*single_tag,*caps_tag, *weight_tag, *str_tag,*pixel_tag;	
-  FILE *fp1;
-  int  cap_counter=0;
-  int count=0,flag=0;
-  int nitems,nread;
-  char buffer[MAXBUFSIZE];
-  struct timeval t0,t1;
-  
-  /* double *x,*y,*z; */
-  /* x=(double *)calloc(Ngal,sizeof(double)); */
-  /* y=(double *)calloc(Ngal,sizeof(double)); */
-  /* z=(double *)calloc(Ngal,sizeof(double)); */
-  /* for(i=0;i<Ngal;i++){ */
-  /*   x[i]=sin((90.-dec[i]) * PI/180.)*cos(ra[i] * PI/180.) ; */
-  /*   y[i]=sin((90.-dec[i]) * PI/180.)*sin(ra[i] * PI/180.) ; */
-  /*   z[i]=cos((90.-dec[i]) * PI/180.) ; */
-  /* } */
+
 
 
   polygons_tag = malloc(9*sizeof(char));
@@ -112,7 +128,11 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   single_tag = malloc(2*sizeof(char));
   pixel_tag = malloc(7*sizeof(char));
 
-  fp1=my_fopen(Polygon_File,"r");
+ 
+  
+        fp1=fopen(Polygon_File,"r");
+        assert(fp1!=NULL);
+ 
   fscanf(fp1,"%d %s\n",&n_masks,polygons_tag);
   fprintf(stderr,"jackknife_it> There are %d masks.\n",n_masks);
 
@@ -121,9 +141,12 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   double *weight,*area;
   double x_poly,y_poly,z_poly,dot_poly;
   
-  area=my_calloc(sizeof(*area),n_masks);
-  weight=my_calloc(sizeof(*weight),n_masks);
-  mask_id=my_calloc(sizeof(*mask_id),n_masks);
+
+
+        area=(double *)calloc(n_masks,sizeof(double));
+        weight=(double *)calloc(n_masks,sizeof(double));
+        mask_id=(int *)calloc(n_masks,sizeof(int));
+
 
   char check[100];
   fscanf(fp1,"%s",check);	
@@ -135,7 +158,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   nitems = 10;
   /* fscanf(fp1,"%d %s %d %s %lf %s %d %s %lf %s", */
   /* 	 &mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag);	 */
-
+  
 
   fgets(buffer,MAXBUFSIZE,fp1);
   nread=sscanf(buffer,"%d %s %d %s %lf %s %d %s %lf %s",
@@ -160,36 +183,26 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   }
 
   nitems=11;
-  gettimeofday(&t0,NULL);
-  for(i=1;i<n_masks;i++) {
-    
-    /* fscanf(fp1,"%s %d %s %d %s %lf %s %d %s %lf %s", */
-    /* 	   polygon_tag,&mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag); */
 
+  for(i=1;i<n_masks;i++) {
+   
     fgets(buffer,MAXBUFSIZE,fp1);
     nread=sscanf(buffer,"%s %d %s %d %s %lf %s %d %s %lf %s",
     	   polygon_tag,&mask_id[i],single_tag,&n_circ,caps_tag,&weight[i],weight_tag,&pixel,pixel_tag,&area[i],str_tag);
 
-    /* nitems=4; */
-    /* nread=sscanf(buffer,"%*s %d %*s %d %*s %lf %*s %*d %*s %lf", */
-    /* 	   &mask_id[i],&n_circ,&weight[i],&area[i]); */
-
     assert(nread==nitems);
-    
-    /* cap_counter+=n_circ; */
-    /* for (k=0;k<n_circ;k++) { */
-    /*   fscanf(fp1,"%lf %lf %lf %lf ",&x_poly,&y_poly,&z_poly,&dot_poly); */
-    /* } */
+   
 
     for(k=0;k<n_circ;k++) {
       fgets(buffer,MAXBUFSIZE,fp1);
     }
   }
-  gettimeofday(&t1,NULL);
-  fprintf(stderr,"fscanf time = %6.2lf sec\n",ADD_DIFF_TIME(t0,t1));
+
+
 
 
   double *sector_area,*sector_weight;
+
   int *unique_ids,*jackknife_number;
   *area_tot=0;
   int ids;
@@ -216,41 +229,41 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
 
   int n_unique_ids=0;
-   double dec_max=65.,dec_min=-4.;
   flag=0;
 
 
-  double triple_loop_time=0.0;
 
-  gettimeofday(&t0,NULL);
-  for(i=0;i<n_masks;i++){ 
-    for(k=0;k<Ngal;k++){
-      if(mask_id[i]==Galaxy_Sector_Ids[k]){
-	for(j=0;j<n_masks;j++){
-	  if((mask_id[i]==unique_ids[j])){
-	    sector_area[j]+= area[i];
-                                                
-	    flag=1;
-	  }
+
+
+
+  for(i=0;i<n_masks;i++){
+  	for(j=0;j<count;j++){
+        	if((mask_id[i]==unique_ids[j])){
+                	sector_area[j]+= area[i];
+                        flag=1;
+                }
+         }
+         if((flag==0 && weight[i] > min_weight)){
+         	unique_ids[count]=mask_id[i];
+                sector_area[count]=area[i];
+                sector_weight[count]=weight[i];
+                count++;
 	}
 
-	if((flag==0)){
-	  unique_ids[count]=mask_id[i];
-	  sector_area[count]=area[i];
-	  sector_weight[count]=weight[i];
-	  count++;
-	}
+        flag=0;
 
-	flag=0;
-	break;
-      }
-    }
   }
-  gettimeofday(&t1,NULL);
-  triple_loop_time += ADD_DIFF_TIME(t0,t1);
+
+
+
+        flag=0;
+ 
+  
+
+
 
 	
-  fprintf(stderr,"There are %d unique_ids...triple_loop_time = %6.2lf sec\n",count,triple_loop_time);
+
   n_unique_ids=count;
 
   for(i=0;i<n_unique_ids;i++){
@@ -260,22 +273,19 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
   }
 
-  gettimeofday(&t0,NULL);
+//  gettimeofday(&t0,NULL);
   for(i=0;i<n_unique_ids;i++){
     for(j=0;j<Ngal;j++){
-      if(Galaxy_Sector_Ids[j]==unique_ids[i]){
+ //     if(Galaxy_Sector_Ids[j]==unique_ids[i]){
                                 
 	xaverage[i]+=x[j];
 	yaverage[i]+=y[j];
 	zaverage[i]+=z[j];
 	flag++;
 
-      }
+//      }
     }
 
-    if(flag==0){
-      fprintf(stderr,"Something terrible has happened with xaverage sector id[%d]=%d\n",i,unique_ids[i]);
-    }
 
     xaverage[i]/=flag;
     yaverage[i]/=flag;
@@ -283,13 +293,15 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
     flag=0;
   }
-  gettimeofday(&t1,NULL);
-  triple_loop_time += ADD_DIFF_TIME(t0,t1);
+
+
+ // gettimeofday(&t1,NULL);
+ // triple_loop_time += ADD_DIFF_TIME(t0,t1);
 
   
   for(i=0;i<n_unique_ids;i++) {
     if(xaverage[i]==-1. || yaverage[i]==-1. || zaverage[i]==-1)
-      fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
+	fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
     
   }
 
@@ -300,13 +312,6 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 		sect_center_ra[i] =2.0*PI + sect_center_ra[i];
 	sect_center_ra[i]=180./PI*sect_center_ra[i];
    	sect_center_dec[i]=90.- 180./PI * acos(zaverage[i]/SQRT(SQR(xaverage[i]) + SQR(yaverage[i]) + SQR(zaverage[i])));
-	if(dec_min > sect_center_dec[i])
-                dec_min = sect_center_dec[i];
-        if(dec_max < sect_center_dec[i])
-                dec_max = sect_center_dec[i];
-
-
-
 
   }
 
@@ -333,10 +338,10 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
   fprintf(stderr,"Total area = %lf, Jackknife area=%lf\n",*area_tot,area_bin);
 
   *area_tot=0;
-
+   double dec_max=65.,dec_min=-4.;
    int n_dec_bins=floor(SQRT(N_Jackknife));
    double dec_bins_size=(dec_max-dec_min)/n_dec_bins;
-
+   flag=0;
 
       for(j=0;j<n_dec_bins;j++){
                 for(i=0;i<n_unique_ids;i++){
@@ -355,7 +360,6 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
         }
 
 
-
    double *jack_ra,*jack_dec,*jack_x,*jack_y,*jack_z;
    jack_ra=(double *)calloc(N_Jackknife,sizeof(double));
    jack_dec=(double *)calloc(N_Jackknife,sizeof(double));
@@ -368,7 +372,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
    for(i=0;i<N_Jackknife;i++){
         for(j=0;j<n_unique_ids;j++){
-                if(jackknife_number[j]==i && unique_ids[j] > -1){
+                if(jackknife_number[j]==i){
                         jack_ra[i]+=sect_center_ra[j];
                         jack_dec[i]+=sect_center_dec[j];
 
@@ -387,6 +391,10 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
         flag=0;
   }
 
+
+        for(i=0;i<N_Jackknife;i++)
+                fprintf(stderr,"Jackknife %d %lf %lf\n",i,jack_ra[i],jack_dec[i]);
+
         double r,rmin=1000000000.0;
 
 
@@ -398,32 +406,11 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
                                 rmin=r;
                         }
                 }
-                if(Galaxy_Jackknife_Ids[i]==-1){
-                        fprintf(stderr,"Something Terrible Has Gone Wrong %lf %lf %d\n",ra[i],dec[i],Galaxy_Sector_Ids[i]);
-                }
-                rmin=10000000;
-
-        }
+ 
+                rmin=1000000000.;	
+	}
 
 
-
-
-
-/* 
-  
-
-  for(i=0;i<Ngal;i++){
-    for(j=0;j<n_unique_ids;j++){
-      if(Galaxy_Sector_Ids[i]==unique_ids[j]){
-	Galaxy_Jackknife_Ids[i]=jackknife_number[j];
-								
-	break;
-      }
-    }
-	
-  }
-
-*/	
 
   fclose(fp1);
   /* free(x); */

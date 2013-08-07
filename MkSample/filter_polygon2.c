@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
 
 int Nmax=1E6;
-int *data_polygons,*data_sectors;
+double *data_polygons;
 int ijunk;
 int n_data_polygons;
 long n_check,n_masks;
@@ -46,13 +46,13 @@ int flag=0;
    assert( fp1 != NULL );
 
 
-	data_polygons=(int *)calloc(Nmax, sizeof(int));
-	data_sectors=(int *)calloc(Nmax, sizeof(int));
+	data_polygons=(double *)calloc(Nmax, sizeof(double));
+
 	
-	while(fscanf(fp1,"%d %d ",&data_sectors[i],&data_polygons[i])!=EOF){
+	while(fscanf(fp1,"%lf",&data_polygons[i])!=EOF){
 		i++;
 	}
-fprintf(stderr,"HIIIIIIIIIIIIIIIII\n"); 	
+
 
 n_data_polygons=i;
 fscanf(stdin,"%ld %s\n",&n_masks,polygons_tag);
@@ -61,6 +61,8 @@ fprintf(stdout,"%ld polygons\n",n_masks);
 int mask_id,pixel,n_circ;
 double weight,area;
 double x_poly,y_poly,z_poly,dot_poly;
+int count=0;
+
 
 flag=0;
 
@@ -69,20 +71,20 @@ flag=0;
                		polygon_tag,&mask_id,single_tag,&n_circ,caps_tag,&weight,weight_tag,&pixel,pixel_tag,&area,str_tag);
 
 	
-                fprintf(stderr,"polygon                 %d ( %d caps,            %8.7lf weight, 1517 pixel,  %17.16lf str):\n",mask_id,n_circ,weight,area);
+//                fprintf(stderr,"polygon                 %d ( %d caps,            %8.7lf weight, 1517 pixel,  %17.16lf str):\n",mask_id,n_circ,weight,area);
 
 
 		for(j=0;j<n_data_polygons;j++){
-			if(mask_id == data_polygons[j]){	
-				mask_id=data_sectors[j];
+			if(mask_id == (int) data_polygons[j]){	
+
 				flag=1;
-				fprintf(stderr,"HIIIIIIIIIIIIII\n");
+				count++;	
 				break;
 			}
 		}	
 
 		if(flag==1){
-			fprintf(stdout,"polygon                 %d ( %d caps,            %8.7lf weight, 1517 pixel,  %17.16lf str):\n",data_sectors[j],n_circ,weight,area);			
+			fprintf(stdout,"polygon                 %d ( %d caps,            %8.7lf weight, 1517 pixel,  %17.16lf str):\n",mask_id,n_circ,weight,area);			
 			for (k=0;k<n_circ;k++) {
        		 		fscanf(stdin,"%lf %lf %lf %lf\n",&x_poly,&y_poly,&z_poly,&dot_poly);
 				fprintf(stdout,"%21.20lf	%21.20lf	%21.20lf	%21.20lf\n",x_poly,y_poly,z_poly,dot_poly);
@@ -96,6 +98,7 @@ flag=0;
 		flag=0;
 	}
 
+fprintf(stdout,"%d polygons\n",count);
 
 	
 

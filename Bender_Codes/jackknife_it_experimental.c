@@ -4,7 +4,7 @@
 
 #define MAXBUFSIZE    (1000)
 #include "jackknife_it.h"
-/*
+
 int main()
 {
 
@@ -60,10 +60,10 @@ weight=(double *)calloc(Nmax,sizeof(double));
         
         fprintf(stderr,"Ngal=%d\n",Ngal);
 
-        snprintf(Polygon_File,500,"/data2/jap/Clustering/Boss/dr11/mask-cmass-dr11v0-N-Anderson.ply");
+        snprintf(Polygon_File,500,"/data2/jap/Clustering/Boss/dr11/mask-cmass-dr11v0-N-Anderson.filtered");
 
 
-        jackknife_it(160,Polygon_File,Sector_ids,Jackknife_ids,Ngal,ra,dec,&area_tot,x,y,z);
+        jackknife_it(100,Polygon_File,Sector_ids,Jackknife_ids,Ngal,ra,dec,&area_tot,x,y,z);
 
         for(i=0;i<Ngal;i++)
                 fprintf(stdout,"%lf %lf %d %d\n",ra[i],dec[i],Sector_ids[i],Jackknife_ids[i]);  
@@ -73,7 +73,7 @@ return 0;
 }
 
 
-*/
+
 
 
 void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *ra, double *dec, double *area_tot,
@@ -288,9 +288,9 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
   
   for(i=0;i<n_unique_ids;i++) {
-    if(xaverage[i]==-1. || yaverage[i]==-1. || zaverage[i]==-1)
-      fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
-    
+	    if(xaverage[i]<-1000. || yaverage[i]<-1000. || zaverage[i]<-1000)
+      		fprintf(stderr,"Something terrible has happened with sector_id[%d]=%d\n",i,unique_ids[i]);
+//    	fprintf(stderr,"%lf %lf %lf\n",xaverage[i],yaverage[i],zaverage[i]);
   }
 
 
@@ -301,12 +301,9 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	sect_center_ra[i]=180./PI*sect_center_ra[i];
    	sect_center_dec[i]=90.- 180./PI * acos(zaverage[i]/SQRT(SQR(xaverage[i]) + SQR(yaverage[i]) + SQR(zaverage[i])));
 	if(dec_min > sect_center_dec[i])
-                dec_min = sect_center_dec[i];
-        if(dec_max < sect_center_dec[i])
-                dec_max = sect_center_dec[i];
-
-
-
+		dec_min = sect_center_dec[i];
+	if(dec_max < sect_center_dec[i])
+		dec_max = sect_center_dec[i];	
 
   }
 
@@ -322,13 +319,15 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
 
   //	SGLIB_ARRAY_QUICK_SORT(int,unique_ids, count, SGLIB_NUMERIC_COMPARATOR , MULTIPLE_ARRAY_EXCHANGER);
-  SGLIB_ARRAY_QUICK_SORT(double,sect_center_ra, count, SGLIB_NUMERIC_COMPARATOR , MULTIPLE_ARRAY_EXCHANGER);
+  SGLIB_ARRAY_QUICK_SORT(double,sect_center_ra, n_unique_ids, SGLIB_NUMERIC_COMPARATOR , MULTIPLE_ARRAY_EXCHANGER);
 
-  for(i=0;i<count;i++){
+  for(i=0;i<n_unique_ids;i++){
     *area_tot+=sector_area[i];
   }
 	
   double area_bin=*area_tot/N_Jackknife;
+
+
 
   fprintf(stderr,"Total area = %lf, Jackknife area=%lf\n",*area_tot,area_bin);
 
@@ -341,7 +340,7 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
       for(j=0;j<n_dec_bins;j++){
                 for(i=0;i<n_unique_ids;i++){
 
-                        if((sect_center_dec[i] >=(dec_min + j*dec_bins_size)) && (sect_center_dec[i] < (dec_min + (j+1)*dec_bins_size))){
+                       if((sect_center_dec[i] >=(dec_min + j*dec_bins_size)) && (sect_center_dec[i] < (dec_min + (j+1)*dec_bins_size))){
 
                                 *area_tot+=sector_area[i];
                                 jackknife_number[i]=(int)floor(*area_tot/area_bin);
@@ -386,6 +385,8 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
         flag=0;
   }
+	for(i=0;i<N_Jackknife;i++)
+		fprintf(stderr,"Jackknife %d %lf %lf\n",i,jack_ra[i],jack_dec[i]);
 
         double r,rmin=1000000000.0;
 
