@@ -76,7 +76,7 @@ return 0;
 */
 
 
-void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *ra, double *dec, double *area_tot,
+void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *jack_x, double *jack_y, double *jack_z, double *area_tot,
 		  double *x,double *y,double *z)
 {
 
@@ -356,12 +356,12 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 
 
 
-   double *jack_ra,*jack_dec,*jack_x,*jack_y,*jack_z;
+   double *jack_ra,*jack_dec;
    jack_ra=(double *)calloc(N_Jackknife,sizeof(double));
    jack_dec=(double *)calloc(N_Jackknife,sizeof(double));
-   jack_x=(double *)calloc(N_Jackknife,sizeof(double));
-   jack_y=(double *)calloc(N_Jackknife,sizeof(double));
-   jack_z=(double *)calloc(N_Jackknife,sizeof(double));
+
+
+
 
 
   flag=0;
@@ -395,23 +395,12 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	for(i=0;i<N_Jackknife;i++)
 		fprintf(stderr,"Jackknife %d %lf %lf\n",i,jack_ra[i],jack_dec[i]);
 
-        double r,rmin=1000000000.0;
 
 
-        for(i=0;i<Ngal;i++){
-                for(j=0;j<N_Jackknife;j++){
-                        r=SQRT(SQR(x[i]-jack_x[j]) + SQR(y[i]-jack_y[j])+ SQR(z[i]-jack_z[j]));
-                                if(r<rmin){
-                                Galaxy_Jackknife_Ids[i]=j;
-                                rmin=r;
-                        }
-                }
-                if(Galaxy_Jackknife_Ids[i]==-1){
-                        fprintf(stderr,"Something Terrible Has Gone Wrong %lf %lf %d\n",ra[i],dec[i],Galaxy_Sector_Ids[i]);
-                }
-                rmin=10000000;
 
-        }
+
+
+
 
 
 

@@ -117,6 +117,10 @@ int main(int argc, char *argv[])
     Distance_to_Redshift=1646., /*distance to inner redshift bin */
     cos_Theta,
     rp;
+
+  double *jack_x,
+	*jack_y,
+	*jack_z;
   int	bin;
   /*Random Counters and Such */
   int	i=0,j=0,k=0;
@@ -170,6 +174,9 @@ int main(int argc, char *argv[])
   Redshift_s = my_calloc(sizeof(*Redshift_s),Spectro_Size);
   Weight_s   = my_calloc(sizeof(*Weight_s),Spectro_Size);
   Sector_s   = my_calloc(sizeof(*Sector_s),Spectro_Size);
+  jack_x   = my_calloc(sizeof(*jack_x),N_Jackknife);
+  jack_y   = my_calloc(sizeof(*jack_y),N_Jackknife);
+  jack_z   = my_calloc(sizeof(*jack_z),N_Jackknife);
 
 	
 
@@ -336,10 +343,45 @@ int main(int argc, char *argv[])
 
    */
 
+  double r,rmin;
   gettimeofday(&t0,NULL);
-  jackknife_it(N_Jackknife,Polygon_File,Sector_s,Jackknife_s,Ngal_s,RA_s,Dec_s,&area_tot,X_s,Y_s,Z_s);
-  fprintf(stderr,"Done with Spectro Jackknife, Beginning Imaging\n");
-  jackknife_it(N_Jackknife,Polygon_File,Sector_i,Jackknife_i,Ngal_i,RA_i,Dec_i,&area_tot,X_i,Y_i,Z_i);
+  jackknife_it(N_Jackknife,Polygon_File,Sector_s,Ngal_s,jack_x,jack_y,jack_z,&area_tot,X_s,Y_s,Z_s);
+  
+  for(i=0;i<Ngal_s;i++){
+                for(j=0;j<N_Jackknife;j++){
+                        r=SQRT(SQR(X_s[i]-jack_x[j]) + SQR(Y_s[i]-jack_y[j])+ SQR(Z_s[i]-jack_z[j]));
+                                if(r<rmin){
+                                Jackknife_s[i]=j;
+                                rmin=r;
+                        }
+                }
+                if(Jackknife_s[i]==-1){
+                        fprintf(stderr,"Something Terrible Has Gone Wrong with the Jackknife_s\n");
+                }
+                rmin=10000000;
+
+        }
+
+   
+    for(i=0;i<Ngal_i;i++){
+                for(j=0;j<N_Jackknife;j++){
+                        r=SQRT(SQR(X_i[i]-jack_x[j]) + SQR(Y_i[i]-jack_y[j])+ SQR(Z_i[i]-jack_z[j]));
+                                if(r<rmin){
+                                Jackknife_i[i]=j;
+                                rmin=r;
+                        }
+                }
+                if(Jackknife_i[i]==-1){
+                        fprintf(stderr,"Something Terrible Has Gone Wrong with the Jackknife_i\n");
+                }
+                rmin=10000000;
+
+        }
+
+
+
+
+
   gettimeofday(&t1,NULL);
   fprintf(stderr,"Jack-knifes done - total time = %6.2lf sec\n",ADD_DIFF_TIME(t0,t1));
   
