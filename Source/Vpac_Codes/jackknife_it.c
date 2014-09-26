@@ -76,8 +76,7 @@ return 0;
 */
 
 
-void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int *Galaxy_Jackknife_Ids, int Ngal, double *jack_x, double *jack_y, double *jack_z, double *area_tot,
-		  double *x,double *y,double *z)
+void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, int Ngal, double *jack_x, double *jack_y, double *jack_z, double *area_tot,double *x,double *y,double *z)
 {
 
   fprintf(stderr,"jackknife_it> In Jackknife Function\n");
@@ -392,8 +391,8 @@ void jackknife_it(int N_Jackknife, char *Polygon_File, int *Galaxy_Sector_Ids, i
 	
   }
 
-	for(i=0;i<N_Jackknife;i++)
-		fprintf(stderr,"Jackknife %d %lf %lf\n",i,jack_ra[i],jack_dec[i]);
+
+
 
 
 
