@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
   fprintf(stderr,"BOSS Wp > The Distance to the closest redshift is %lf\n",Distance_to_Redshift);
   //	fprintf(stderr,"The Maximum Separation you decided is %lf\n",Max_Separation);	
 
-  Maximum_Dec_Separation=asin(Max_Separation/(2*Distance_to_Redshift))*2.*RAD_TO_DEG*1.00002; //The maximum separation that can happen and let's multiply it by 20% more
+  Maximum_Dec_Separation=asin(Max_Separation/(2*Distance_to_Redshift))*2.*RAD_TO_DEG; //The maximum separation that can happen and let's multiply it by 20% more
   fprintf(stderr,"BOSS Wp > Maximum Dec Separation is %lf\n",Maximum_Dec_Separation);
   
   
