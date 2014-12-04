@@ -39,12 +39,12 @@ Notes:
 
 #define SQR(x) ((x)*(x))
 #define SQRT(x) (pow(x,0.5))
-#define OMEGA_M (0.274)
-#define OMEGA_L (0.726)
+#define OMEGA_M (0.25)
+#define OMEGA_L (0.75)
 #define	W_INDEX (-1.0)
 #define H_0 (100)
 #define SPEED_OF_LIGHT (299792)
-#define LITTLE_H (1)
+#define LITTLE_H (1.0)
 
 
 #define ADD_DIFF_TIME(tstart,tend)                        ((tend.tv_sec - tstart.tv_sec) + 1e-6*(tend.tv_usec-tstart.tv_usec)) 
@@ -264,17 +264,21 @@ int main(int argc, char *argv[])
       Distance_to_Near_Z=Distance_s[i];		
       Minimum_Redshift=Redshift_s[i];
     }
-    if(Redshift_s[i] > Maximum_Redshift)
+    if(Redshift_s[i] > Maximum_Redshift){
 	Distance_to_Far_Z=Distance_s[i];
-
+	Maximum_Redshift=Redshift_s[i];
+	}
     mean_distance+=Distance_s[i];
   }
   gsl_integration_workspace_free(w);
   
   fprintf(stderr,"BOSS Wp > Mean Distance = %lf\n",mean_distance/Ngal_s);	
   fprintf(stderr,"BOSS Wp > The Distance to the closest redshift is %lf\n",Distance_to_Near_Z);
-  fprintf(stderr,"BOSS Wp > The Distance to the furthest redshift is %lf\n",Distance_to_Far_Z);
-  double Volume=4./3.*PI*(Distance_to_Far_Z - Distance_to_Near_Z)*(Distance_to_Far_Z - Distance_to_Near_Z)*(Distance_to_Far_Z - Distance_to_Near_Z);
+  fprintf(stderr,"BOSS Wp > The Distance to the furthest redshift %lf is %lf\n",Maximum_Redshift,Distance_to_Far_Z);
+  double dist_range=(Distance_to_Far_Z - Distance_to_Near_Z);
+  double Volume1=4./3.*PI*pow(Distance_to_Far_Z,3);
+  double Volume2=4./3.*PI*pow(Distance_to_Near_Z,3);
+  double Volume=Volume1-Volume2;
   fprintf(stderr,"BOSS Wp > Spherical Volume =%lf\n",Volume);
   fprintf(stderr,"BOSS Wp > Number Density of Spectro Gal =%17.16f\n",Ngal_s/Volume);
   //	fprintf(stderr,"The Maximum Separation you decided is %lf\n",Max_Separation);	
@@ -357,8 +361,8 @@ int main(int argc, char *argv[])
       distance_squared+=1./SQR(Distance_s[i]);
       Normalization+=number_density_of_imaging*Weight_s[i]*1./SQR(Distance_s[i]);
     }
-    Normalization=117866.7;
-//	Normalization=number_density_of_imaging*0.723323;	 
+//    Normalization=239724.8;
+//	Normalization=number_density_of_imaging*1.204988;	 
 	fprintf(stderr,"Distance Squared = %lf,Normalization =%lf\n",distance_squared,Normalization); 
   }
  
