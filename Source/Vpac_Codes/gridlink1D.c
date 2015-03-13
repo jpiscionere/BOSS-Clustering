@@ -38,7 +38,8 @@
 #define NGRIDMAX 100000      /* maximum grid dimension */
 #define MEMORY_INCREASE_FAC   1.5
 
-void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *x1,double *y1,double *z1,double *dec,int *ngrid,cellarray **lattice)
+void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *x1,double *y1,double *z1,double *dec,double *mag,int *ngrid,cellarray **lattice)
+
 {
   int nmesh,iz ;
   const double ddec = dmax-dmin;
@@ -66,6 +67,7 @@ void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *
     tmp->y     = my_malloc(sizeof(double),expected_n);
     tmp->z     = my_malloc(sizeof(double),expected_n);
     tmp->dec    = my_malloc(sizeof(double),expected_n);
+    tmp->mag    = my_malloc(sizeof(double),expected_n);
     tmp->index = my_malloc(sizeof(int),expected_n);
     tmp->nelements=0;
     tmp->nallocated=expected_n;
@@ -93,6 +95,8 @@ void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *
 	tmp->y = my_realloc_in_function((void **) &(tmp->y) ,sizeof(double),expected_n,"lattice.y");
 	tmp->z = my_realloc_in_function((void **) &(tmp->z) ,sizeof(double),expected_n,"lattice.z");
 	tmp->dec= my_realloc_in_function((void **) &(tmp->dec),sizeof(double),expected_n,"lattice.dec");
+	tmp->mag= my_realloc_in_function((void **) &(tmp->mag),sizeof(double),expected_n,"lattice.dec");
+
 	
 	tmp->index=my_realloc_in_function((void **) &(tmp->index),sizeof(int),expected_n,"lattice.index");
 	/* gettimeofday(&t1,NULL); */
@@ -111,6 +115,7 @@ void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *
       tmp->y[index] = y1[i];
       tmp->z[index] = z1[i];
       tmp->dec[index] = dec[i];
+      tmp->mag[index] = mag[i];
       tmp->index[index] = i;
       tmp->nelements++;
       /* gettimeofday(&t1,NULL); */

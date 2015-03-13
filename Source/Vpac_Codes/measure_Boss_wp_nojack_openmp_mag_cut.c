@@ -20,6 +20,7 @@ Notes:
 #include <stdlib.h>
 #include <assert.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_interp.h>
 #include <string.h>
 
 #include "cellarray.h"
@@ -75,10 +76,12 @@ int main(int argc, char *argv[])
   /*Input args/files */
 
   FILE 	*fp1, /*Spectroscopic Galaxy File */
-    *fp2; /*Imaging Galaxy File */
+    *fp2, /*Imaging Galaxy File */
+    *fp3; /*Evolution Correction */
 
   char	*Gxy_Spectro,
-    *Gxy_Imaging;
+    *Gxy_Imaging,
+     Evolution_Correction[MAXLEN];
 
 
   int	N_Bins; /*Number of log bins */
@@ -93,10 +96,12 @@ int main(int argc, char *argv[])
   int	Spectro_Size=1E5; /*This is the assumed length of the galaxy file */
   double	*RA_s, /* Given */
     *Dec_s, /* Given */
-    *Redshift_s, /*Given */
+    *Redshift_s,
+    *Mag_Correction, /*Given */
     *Weight_s, /*The Fiber Collision or Completeness Weight of The Galaxy/Randoms */	
     *Distance_s,
-    *AngDiam_Distance; /* Conversion from Redshift */
+    *Distance_Modulus,
+    logLuminosityDistance_s;
 
   double	*X_s,*Y_s,*Z_s; /*The cartesian elements to calculate cos_Theta*/
   double area_tot=4*PI;
@@ -105,7 +110,9 @@ int main(int argc, char *argv[])
 
   int 	Imaging_Size=4E5; /*This is the assumed length of the imaging file */
   double  *RA_i, /* Given */
-    *Dec_i; /* Given */
+    *Dec_i,
+    *mag_r,
+    extinction; /* Given */
 
 
 
@@ -128,7 +135,7 @@ int main(int argc, char *argv[])
   int	Ngal_s=0; /*Number of Galaxies/Randoms in the Spectro Sample */
   int 	Ngal_i=0; /*Number of Galaxies/Randoms in the Imagin Sample */
   /* void gridlink1D(int np,double rmin,double rmax,double rcell,double *z,int *ngrid,int **gridinit,int **gridlist); */
-  void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *x1,double *y1,double *z1,double *dec,int *ngrid,cellarray **lattice);
+  void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *x1,double *y1,double *z1,double *dec, double *mag, int *ngrid,cellarray **lattice);
 
   struct timeval t0,t1;
 
@@ -143,10 +150,18 @@ int main(int argc, char *argv[])
   sscanf(argv[4],"%lf",&Max_Separation);
   sscanf(argv[5],"%d",&N_Bins);
   sscanf(argv[6],"%d",&Normalization_Choice);
+  
   if(argc > 6)
 	sscanf(argv[7],"%lf",&area_tot) ;
 
-
+  if(Normalization_Choice==1){
+	fprintf(stderr,"BOSS Wp > Using Data Imaging Catalogue with Magnitude Cuts.\n");
+  }else if(Normalization_Choice==2){
+	fprintf(stderr,"BOSS Wp > Using Random Imaging Catalogue with Ri Normalization and No Mag Cuts.\n");
+  }else{
+	fprintf(stderr,"BOSS Wp > NORMALIZATION CHOICE OUT OF BOUNDS, BAILING OUT\n");
+	return -1;
+ }
 
   log_Bin_Size=(log10(Max_Separation)-log10(Start_Bin))/(N_Bins);
   //log_Bin_Size=(log10(Max_Separation)-log10(Start_Bin))/(N_Bins-1.);
@@ -170,17 +185,47 @@ int main(int argc, char *argv[])
 
 
   /*Spectro Arrays*/
-  //Variables in the file
+  double *z_,*g_r,*delta_g;
+  
   RA_s       = my_calloc(sizeof(*RA_s),Spectro_Size);
   Dec_s      = my_calloc(sizeof(*Dec_s),Spectro_Size);
   Redshift_s = my_calloc(sizeof(*Redshift_s),Spectro_Size);
+  Mag_Correction=my_calloc(sizeof(*Mag_Correction),Spectro_Size);
   Weight_s   = my_calloc(sizeof(*Weight_s),Spectro_Size);
+  delta_g   = my_calloc(sizeof(*delta_g),Spectro_Size);
+  z_   = my_calloc(sizeof(*z_),Spectro_Size);
+  g_r   = my_calloc(sizeof(*g_r),Spectro_Size);
 
 
 
 
 
-	
+ 
+  snprintf(Evolution_Correction,MAXLEN,"/home/piscioja/Clustering/Boss/Source/Vpac_Codes/correction.txt");
+  fp3=fopen(Evolution_Correction,"r") ;
+  assert( fp3 != NULL );
+  i=0;
+  while(fscanf(fp3,"%lf %lf %lf ",&z_[i],&delta_g[i],&g_r[i])!=EOF){
+		i++;
+        }
+
+
+
+        int n=i;
+
+
+  gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+  gsl_interp_init(interpolation, z_, delta_g, n);
+  gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+
+
+
+  double inverse_speed_of_light=1./SPEED_OF_LIGHT;	
+
+  //Coefficents to the cubic polynomial fit of extinction and evolution as a function of redshift
+
+  double mag_1,mag_2,z_calibration=0.2;
 
   /////////////////////////////* [ READ IN THE GALAXY FILES AND CONVERT REDSHIFTS TO MPC ] *////////////////////////////////////
   	
@@ -195,10 +240,17 @@ int main(int argc, char *argv[])
     nread=sscanf(buffer,"%lf %lf %lf %lf %d",&RA_s[i],&Dec_s[i],&Redshift_s[i],&Weight_s[i],&trash_d);
     if (nread == nitems) {
       if(Redshift_s[i] > 10.0) {
-	Redshift_s[i]/=SPEED_OF_LIGHT;
+	Redshift_s[i]*=inverse_speed_of_light;
 	flag=1;
       }
-      
+	mag_1= gsl_interp_eval(interpolation, z_, delta_g, Redshift_s[i], accelerator);
+	
+        mag_2= gsl_interp_eval(interpolation, z_, g_r, Redshift_s[i], accelerator);
+
+	Mag_Correction[i]=mag_1 - mag_2;
+
+
+
       if(Redshift_s[i] < 0) {
 	fprintf(stderr,"BOSS Wp > Warning! Redshift = %lf, NR = %d. Setting to nearly 0.\n",Redshift_s[i],i);
 	Redshift_s[i]=0.00001;
@@ -212,7 +264,8 @@ int main(int argc, char *argv[])
 	Dec_s      = my_realloc(Dec_s,sizeof(*Dec_s),Spectro_Size,"Dec_s");
 	Redshift_s = my_realloc(Redshift_s,sizeof(*Redshift_s),Spectro_Size,"Redshift_s");
 	Weight_s   = my_realloc(Weight_s,sizeof(*Weight_s),Spectro_Size,"Weight_s");
-
+	Mag_Correction   = my_realloc(Mag_Correction,sizeof(*Mag_Correction),Spectro_Size,"Mag_Correction");
+           
       }
     } else {
       fprintf(stderr,"WARNING: In spectroscopic sample line %d did not contain %d elements...skipping line\n",i,nitems);
@@ -226,8 +279,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"BOSS Wp > Warning! You gave me cz instead of redshift!\n"); 
 	
   //Derived variables
-  Distance_s = my_calloc(sizeof(*Distance_s),Ngal_s);
-  AngDiam_Distance = my_calloc(sizeof(*AngDiam_Distance),Ngal_s);
+  Distance_s = my_calloc(sizeof(*Distance_s),Ngal_s); 
+  Distance_Modulus = my_calloc(sizeof(*Distance_Modulus),Ngal_s);
   X_s        = my_calloc(sizeof(*X_s),Ngal_s);
   Y_s        = my_calloc(sizeof(*Y_s),Ngal_s);
   Z_s        = my_calloc(sizeof(*Z_s),Ngal_s);
@@ -254,7 +307,7 @@ int main(int argc, char *argv[])
    */
 
 
-  double mean_distance=0;	
+  double mean_distance=0,distance_modulus_min=100000.0,distance_modulus_max=0.0;	
   /*GSL Numerical Integration Crap */
   gsl_integration_workspace * w 
     = gsl_integration_workspace_alloc (1000);
@@ -267,8 +320,8 @@ int main(int argc, char *argv[])
     gsl_integration_qags (&F, 0, Redshift_s[i], 0, 1e-7, 1000,
 			  w, &result, &error);
     Distance_s[i]=result;
-    AngDiam_Distance[i]=Distance_s[i]/(1. + Redshift_s[i]); 
-   if(Redshift_s[i] < Minimum_Redshift) {
+    
+    if(Redshift_s[i] < Minimum_Redshift) {
       Distance_to_Near_Z=Distance_s[i];		
       Minimum_Redshift=Redshift_s[i];
     }
@@ -277,7 +330,30 @@ int main(int argc, char *argv[])
 	Maximum_Redshift=Redshift_s[i];
 	}
     mean_distance+=Distance_s[i];
+    logLuminosityDistance_s=log10(Distance_s[i]*1e6*(1+Redshift_s[i]));
+    Distance_Modulus[i]=5.0*logLuminosityDistance_s - 5 + Mag_Correction[i] + z_calibration;
+
+
+
+
+//    if(Distance_Modulus[i] > distance_modulus_max)
+//	distance_modulus_max=Distance_Modulus[i];
+//    if(Distance_Modulus[i] < distance_modulus_min)
+//	distance_modulus_min = Distance_Modulus[i];
+
+ 
+//   fprintf(stderr," %lf %lf %lf %lf\n",RA_s[i],Dec_s[i],logLuminosityDistance_s,Redshift_s[i]); 
+ }
+
+  fprintf(stderr,"Min DistMod = %lf Max DistMod = %lf\n",distance_modulus_min,distance_modulus_max);
+
+  if(Normalization_Choice==2){
+	fprintf(stderr,"BOSS Wp > Not using Mag Cuts for Imaging Randoms, Setting Distance Modulus to 0.\n");
+	for(i=0;i<Ngal_s;i++)
+		Distance_Modulus[i]=0;
   }
+
+
   gsl_integration_workspace_free(w);
   
   fprintf(stderr,"BOSS Wp > Mean Distance = %lf\n",mean_distance/Ngal_s);	
@@ -301,31 +377,62 @@ int main(int argc, char *argv[])
   /*Imaging Arrays */
   RA_i     = my_calloc(sizeof(*RA_i),Imaging_Size);
   Dec_i    = my_calloc(sizeof(*Dec_i),Imaging_Size);
-
+  mag_r	   = my_calloc(sizeof(*mag_r),Imaging_Size);
+  extinction=0; 
   
 
-  nitems=3;
+  nitems=5;
   gettimeofday(&t0,NULL);
   fp2=my_fopen(Gxy_Imaging,"r") ;
   i=0;
-  while(fgets(buffer,MAXBUFSIZE,fp2)!=NULL) {
-    nread = sscanf(buffer,"%lf %lf %d",&RA_i[i],&Dec_i[i],&trash_d);
-    if(nread == nitems) {
-      i++;
-      if(i==Imaging_Size) {
-	fprintf(stderr,"Increasing memory allocation for the imaging sample\n");
-	Imaging_Size *= MEMORY_INCREASE_FAC;
-	RA_i     = my_realloc(RA_i,sizeof(*RA_i),Imaging_Size,"RA_i");
-	Dec_i    = my_realloc(Dec_i,sizeof(*Dec_i),Imaging_Size,"Dec_i");
 
-      }
-    } else {
-      fprintf(stderr,"WARNING: line %d did not contain %d elements - skipping\n",i,nitems);
-    }
-  }
+
+
+  if(Normalization_Choice==1){
+  	nitems=5;
+	while(fgets(buffer,MAXBUFSIZE,fp2)!=NULL) {
+    		nread = sscanf(buffer,"%lf %lf %d %lf %lf ",&RA_i[i],&Dec_i[i],&trash_d,&mag_r[i],&extinction);
+    		mag_r[i]=mag_r[i]-extinction;
+     		if(nread == nitems) {
+      			i++;
+      			if(i==Imaging_Size) {
+				fprintf(stderr,"Increasing memory allocation for the imaging sample\n");
+				Imaging_Size *= MEMORY_INCREASE_FAC;
+				RA_i     = my_realloc(RA_i,sizeof(*RA_i),Imaging_Size,"RA_i");
+				Dec_i    = my_realloc(Dec_i,sizeof(*Dec_i),Imaging_Size,"Dec_i");
+				mag_r    = my_realloc(mag_r,sizeof(*mag_r),Imaging_Size,"mag_r");
+			}
+    		} else {
+      				fprintf(stderr,"WARNING: line %d did not contain %d elements - skipping\n",i,nitems);
+    			}	
+  	}
+
+  } else {
+	
+	nitems=3;
+	while(fgets(buffer,MAXBUFSIZE,fp2)!=NULL) {
+        	nread = sscanf(buffer,"%lf %lf %d ",&RA_i[i],&Dec_i[i],&trash_d);	
+		mag_r[i]=-22.2; //Setting mag_r by hand so it passes the Mag_G if condition in the main loop
+		if(nread == nitems) {
+                        i++;
+                        if(i==Imaging_Size) {
+                                fprintf(stderr,"Increasing memory allocation for the imaging sample\n");
+                                Imaging_Size *= MEMORY_INCREASE_FAC;
+                                RA_i     = my_realloc(RA_i,sizeof(*RA_i),Imaging_Size,"RA_i");
+                                Dec_i    = my_realloc(Dec_i,sizeof(*Dec_i),Imaging_Size,"Dec_i");
+				mag_r    = my_realloc(mag_r,sizeof(*mag_r),Imaging_Size,"mag_r");
+              		}
+                } else {
+                                fprintf(stderr,"WARNING: line %d did not contain %d elements - skipping\n",i,nitems);
+                        }
+        }
+ }
+  Ngal_i=i;
   fclose(fp2);
   gettimeofday(&t1,NULL);
-  Ngal_i=i;
+
+
+  
   if(Ngal_i >= Imaging_Size) {
     fprintf(stderr,"BOSS Wp > Something Terrible Has Happened: IMAGING FILE TOO LONG!!!\n");
     return EXIT_FAILURE;
@@ -346,12 +453,13 @@ int main(int argc, char *argv[])
   }
 
 
-
   for(i=0;i<Ngal_i;i++){
     X_i[i]=sin((90-Dec_i[i]) * DEG_TO_RAD)*cos(RA_i[i] * DEG_TO_RAD) ;
     Y_i[i]=sin((90-Dec_i[i]) * DEG_TO_RAD)*sin(RA_i[i] * DEG_TO_RAD) ;
     Z_i[i]=cos((90-Dec_i[i]) * DEG_TO_RAD) ;
-  }
+
+ }
+
 
     /*
    *This is where the jackknife call is going to go.
@@ -360,25 +468,23 @@ int main(int argc, char *argv[])
    *The jackknife ID corresponds to the *one* jackknife sample that galaxy doesn't belong in.
 
    */
+
+
   
   double number_density_of_imaging=Ngal_i/area_tot;
-  double distance_squared=0.0,Normalization=0.0;
-
+  double distance_squared=0,Normalization=0.0;
   if(Normalization_Choice==1) {
-
-   for(i=0;i<Ngal_s;i++) {
+    for(i=0;i<Ngal_s;i++) {
       Normalization+=Weight_s[i];
     } 
-
- } else {  
-
+  } else {  
     for(i=0;i<Ngal_s;i++){
       distance_squared+=1./SQR(Distance_s[i]);
       Normalization+=number_density_of_imaging*Weight_s[i]*1./SQR(Distance_s[i]);
     }
-
+//    Normalization=239724.8;
 //	Normalization=number_density_of_imaging*1.204988;	 
-	fprintf(stderr,"Distance Squared = %lf,Normalization =%lf\n",distance_squared,Normalization); 
+	fprintf(stderr,"BOSS Wp > Distance Squared = %lf,Normalization =%lf\n",distance_squared,Normalization); 
   }
  
 
@@ -393,9 +499,14 @@ int main(int argc, char *argv[])
   cellarray *lattice;
   
   ngrid=0 ;
+
+
+
+
   /* gridlink1D(Ngal_i,dmin,dmax,Max_Separation,Dec_i,&ngrid,&gridinit1D,&gridlist1D) ; */
-  gridlink1D_with_struct(Ngal_i,dmin,dmax,Maximum_Dec_Separation,X_i,Y_i,Z_i,Dec_i,&ngrid,&lattice);
+  gridlink1D_with_struct(Ngal_i,dmin,dmax,Maximum_Dec_Separation,X_i,Y_i,Z_i,Dec_i,mag_r,&ngrid,&lattice);
   fprintf(stderr,"gridlink1D done. ngrid= %d\n",ngrid) ;
+
 
   ////////////////////////////////////****Calculation of Wp****/////////////////////////////////////////////////////////////////////////
 //  double rp_sqr=0.0;
@@ -423,11 +534,19 @@ int main(int argc, char *argv[])
   DD    = my_calloc(sizeof(*DD),N_Bins);
 
   double DD_threads[N_Bins][nthreads];
+  int mag_counts_high[nthreads],mag_counts_low[nthreads];
+
   for(i=0;i<N_Bins;i++) {
     for(j=0;j<nthreads;j++) {
       DD_threads[i][j]=0.0;
+      mag_counts_high[j]=0;
+      mag_counts_low[j]=0;
     }
   }
+
+
+
+
 
   /* int ispectro=0,ii=0,p; */
   gettimeofday(&t0,NULL);
@@ -436,7 +555,7 @@ int main(int argc, char *argv[])
   int interrupted=0; 
   init_my_progressbar(Ngal_s,&interrupted);
 /* #pragma omp parallel shared(Dec_s,Weight_s,X_s,Y_s,Z_s,chunk) private(cos_Theta,ispectro,icen,icell,rp_sqr,bin,x1,y1,z1,imaging,cellstruct) */
-#pragma omp parallel default(none) shared(interrupted,stderr,counter,Ngal_s,Dec_s,Weight_s,X_s,Y_s,Z_s,chunk,ngrid,dmin,inv_dmax_diff,Maximum_Dec_Separation,Distance_s,inv_start_bin_sqr,max_sep_sqr,inv_log_bin_size,start_bin_sqr,DD_threads,lattice) 
+#pragma omp parallel default(none) shared(interrupted,stderr,counter,Ngal_s,Dec_s,Weight_s,Distance_Modulus,z_calibration,X_s,Y_s,Z_s,chunk,ngrid,dmin,inv_dmax_diff,Maximum_Dec_Separation,Distance_s,inv_start_bin_sqr,max_sep_sqr,inv_log_bin_size,start_bin_sqr,DD_threads,mag_counts_high,mag_counts_low,lattice) 
   {
     int tid = omp_get_thread_num();
 #pragma omp for schedule(dynamic,chunk)
@@ -460,18 +579,25 @@ int main(int argc, char *argv[])
 	  double *y1 = cellstruct->y;
 	  double *z1 = cellstruct->z;
 	  double *dec = cellstruct->dec;
+          double *mag = cellstruct ->mag;
 	  int *imaging = cellstruct->index;
 	  for(int p=0;p<cellstruct->nelements;p++) {
 	    if(fabs(Dec_s[ispectro]-dec[p]) <= Maximum_Dec_Separation) {
-	      double cos_Theta=X_s[ispectro] * x1[p] + Y_s[ispectro] * y1[p] + Z_s[ispectro] * z1[p];
-	      /* rp_sqr=4.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta)*0.5; /\* sin(arccos x) = sqrt(1-x^2) *\/ */
-	      double rp_sqr=2.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta); /* sin(arccos x) = sqrt(1-x^2) */
-	      if(rp_sqr < max_sep_sqr && rp_sqr >= start_bin_sqr) {
-		int bin=(int)floor((0.5*log10(rp_sqr*inv_start_bin_sqr))*inv_log_bin_size);
-		//	      bin=(int)floor((0.5*log10(rp_sqr*inv_start_bin_sqr))*inv_log_bin_size)-1;
-		/* bin=(int)floor((log10(sqrt(rp_sqr)/Start_Bin))/log_Bin_Size); */
-		DD_threads[bin][tid]+=Weight_s[ispectro]; //Put the Count in the Keeping Track Bin//
-	      }
+		double Magnitude=mag[p]-Distance_Modulus[ispectro]; /*Mag_G Sample Cut */
+		      double cos_Theta=X_s[ispectro] * x1[p] + Y_s[ispectro] * y1[p] + Z_s[ispectro] * z1[p];
+		      /* rp_sqr=4.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta)*0.5; /\* sin(arccos x) = sqrt(1-x^2) *\/ */
+	      		double rp_sqr=2.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta); /* sin(arccos x) = sqrt(1-x^2) */
+	      		if(rp_sqr < max_sep_sqr && rp_sqr >= start_bin_sqr) {
+				 if(Magnitude >= -23.2 && Magnitude < -21.2){
+					int bin=(int)floor((0.5*log10(rp_sqr*inv_start_bin_sqr))*inv_log_bin_size);
+					DD_threads[bin][tid]+=Weight_s[ispectro]; //Put the Count in the Keeping Track Bin//
+				}else if(Magnitude < -23.2){
+					mag_counts_high[tid]++;
+				}else{
+					mag_counts_low[tid]++;
+				}
+	      		}
+	       
 	    }
 	  }
 	}
@@ -481,15 +607,25 @@ int main(int argc, char *argv[])
  
   finish_myprogressbar(&interrupted);
  
+  double tot_DD=0;
   for(i=0;i<N_Bins;i++) {
     for(j=0;j<nthreads;j++){
       DD[i]+=DD_threads[i][j];		
-    }	
+    }
+   tot_DD+=DD[i];	
   }
- 
+
+  int tot_mag_counts_high=0,tot_mag_counts_low=0;
+  for(i=0;i<nthreads;i++){
+	tot_mag_counts_high+=mag_counts_high[i];	
+	tot_mag_counts_low+=mag_counts_low[i];
+	}
   gettimeofday(&t1,NULL);
-  fprintf(stderr,"Double loop time in main -> %6.2lf sec \n",ADD_DIFF_TIME(t0,t1));
+  fprintf(stderr,"BOSS Wp > Double loop time in main -> %6.2lf sec \n",ADD_DIFF_TIME(t0,t1));
+  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to high mag cuts = %d\n",tot_mag_counts_high);
+  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to low mag cuts = %d\n",tot_mag_counts_low);
   
+  fprintf(stderr,"BOSS Wp > Number of total pairs=%lf\n",tot_DD); 
   /* #ifndef USE_AVX */
 	/* for(p=0;p<cellstruct->nelements;p++) { */
 	/*   if(fabs(Dec_s[ispectro]-dec[p]) <= Maximum_Dec_Separation) { */

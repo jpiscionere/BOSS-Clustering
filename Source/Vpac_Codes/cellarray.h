@@ -18,6 +18,7 @@ typedef struct{
   double *y  __attribute__((aligned(ALIGNMENT)));
   double *z  __attribute__((aligned(ALIGNMENT)));
   double *dec __attribute__((aligned(ALIGNMENT)));
+  double *mag __attribute__((aligned(ALIGNMENT)));
   int *index __attribute__((aligned(ALIGNMENT)));
   int nelements;
   int nallocated;
