@@ -409,6 +409,7 @@ int main(int argc, char *argv[])
 			RA_i     = my_realloc(RA_i,sizeof(*RA_i),Imaging_Size,"RA_i");
 			Dec_i    = my_realloc(Dec_i,sizeof(*Dec_i),Imaging_Size,"Dec_i");
 			mag_r    = my_realloc(mag_r,sizeof(*mag_r),Imaging_Size,"mag_r");
+			Sector_i = my_realloc(Sector_i,sizeof(*Sector_i),Imaging_Size,"Sector_i");
 		}
 		
 		} else {
