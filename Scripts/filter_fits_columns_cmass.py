@@ -11,7 +11,7 @@
 import pyfits
 import numpy as np 
 ## Read in the fits file
-hdulist = pyfits.open('object_sdss_imaging.fits')
+hdulist = pyfits.open('cmass-dr11v2-N-Anderson.dat.fits')
 
 
 ## Uncomment the following line to view the info about the table
@@ -19,58 +19,59 @@ print hdulist.info()
 
 ## Read the tabular portion of the fits file into the variable 'table'.  This assumes that the table of interest is located in extension 1 
 table = hdulist[1].data
-#mask= 17.5 < table.field('CMODELMAG')[3] <19.9  
-#newtbdata=table[mask]
-#hdu=pyfits.BinTableHDU(newtbdata)
-
 
 
 ra=table.field('RA')
 dec=table.field('DEC')
-petro_r=table.field('PETROR50')
-petro_r_r=petro_r[:,2]
+redshift=table.field('Z')
 
+extinction=table.field('EXTINCTION')
 
-fiberflux=table.field('FIBERFLUX')
+extinction_g=extinction[:,1]
+extinction_r=extinction[:,2]
+extinction_i=extinction[:,3]
 
-fiberflux_g=fiberflux[:,1]
-fiberflux_r=fiberflux[:,2]
-fiberflux_i=fiberflux[:,3]
+fiberflux=table.field('FIBER2FLUX')
+fiberflux_i= 22.5-2.5*np.log10(fiberflux[:,3]) - extinction_i
 
 
 modelflux=table.field('MODELFLUX')
-petroflux=table.field('PETROFLUX')
-psfflux=table.field('PSFFLUX')
+modelflux_g= 22.5-2.5*np.log10( modelflux[:,1]) - extinction_g
+modelflux_r= 22.5-2.5*np.log10( modelflux[:,2]) - extinction_r
+modelflux_i= 22.5-2.5*np.log10( modelflux[:,3]) - extinction_i
 
 
-psf_r=psfflux[:,2]
-modelflux_r=modelflux[:,2]
-petroflux_r=petroflux[:,2]
-
-surface_brightness=petroflux_r + 2.5*np.log10(2*np.pi*petro_r_r**2)
-c_perp=(fiberflux_r-fiberflux_i) - (fiberflux_g-fiberflux_r)/4.0 - 0.18
-c_perp=np.abs(c_perp)
-
-C_constant=0.7
-
-c_par=C_constant*(fiberflux_g-fiberflux_r) + (1.0-C_constant)*4.0*((fiberflux_r-fiberflux_i)-0.18)
+d_perp=(modelflux_r-modelflux_i) - (modelflux_g-modelflux_r)/8.
 
 
 
+i_cmod_cut= 19.86 + 1.6*(d_perp - 0.8)
+d_perp_cut=0.55
+
+
+weight_cp=table.field('WEIGHT_CP')
+icollided=table.field('ICOLLIDED')
+
+ids=np.where(( modelflux_i > 17.5  ) & 
+	( modelflux_i < 19.9) & 
+	( modelflux_r -  modelflux_i < 2 ) & 
+	( d_perp > d_perp_cut) & 
+	( fiberflux_i < 21.5 ) &
+	( modelflux_i < i_cmod_cut))
+
+
+
+ra_=ra[ids]
+dec_=dec[ids]
+redshift_=modelflux_i[ids]
+weight_cp_=modelflux_r[ids]
+modelflux_i_=modelflux_i[ids]
+modelflux_r_=modelflux_r[ids]
+
+array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
+np.savetxt('dr11v2_imaging.txt',array,delimiter='\t',newline='\n')
 
 
 
 
-
-petro_cut_par= 13.1 + c_par/0.3
-petro_cut=19.2
-c_perp_cut=0.2
-mu_cut=24.2
-psf_model_cut=0.3
-
-
-array=np.column_stack((ra,dec,surface_brightness,petroflux_r,modelflux_r,psf_r,c_perp,petro_cut_par))
-np.savetxt('lrg_selection.txt',array,delimiter='\t',newline='\n')
-
-ids=np.where((petroflux_r < petro_cut_par) & (petroflux_r < petro_cut) & (c_perp < c_perp_cut) & (surface_brightness < mu_cut) & ( psf_r - modelflux_r < psf_model_cut))
  
