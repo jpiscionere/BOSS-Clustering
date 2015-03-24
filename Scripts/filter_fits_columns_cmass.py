@@ -63,7 +63,7 @@ ids=np.where(( modelflux_i > 17.5  ) &
 
 ra_=ra[ids]
 dec_=dec[ids]
-redshift_=modelflux_i[ids]
+redshift_=redshift[ids]
 weight_cp_=modelflux_r[ids]
 modelflux_i_=modelflux_i[ids]
 modelflux_r_=modelflux_r[ids]
@@ -71,7 +71,11 @@ modelflux_r_=modelflux_r[ids]
 array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
 np.savetxt('dr11v2_imaging.txt',array,delimiter='\t',newline='\n')
 
+array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
+array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
+array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
 
+ra_test=ra_[np.where((redshift_ > 0.43) & (redshift_ < 0.5))]
 
 
  
