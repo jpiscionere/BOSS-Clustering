@@ -41,8 +41,8 @@ Notes:
 
 #define SQR(x) ((x)*(x))
 #define SQRT(x) (pow(x,0.5))
-#define OMEGA_M (0.3)
-#define OMEGA_L (0.7)
+#define OMEGA_M (0.274)
+#define OMEGA_L (0.726)
 #define	W_INDEX (-1.0)
 #define H_0 (100)
 #define SPEED_OF_LIGHT (299792)
@@ -95,8 +95,7 @@ int main(int argc, char *argv[])
     *Dec_s, /* Given */
     *Redshift_s, /*Given */
     *Weight_s, /*The Fiber Collision or Completeness Weight of The Galaxy/Randoms */	
-    *Distance_s,
-    *AngDiam_Distance; /* Conversion from Redshift */
+    *Distance_s;
 
   double	*X_s,*Y_s,*Z_s; /*The cartesian elements to calculate cos_Theta*/
   double area_tot=4*PI;
@@ -227,7 +226,6 @@ int main(int argc, char *argv[])
 	
   //Derived variables
   Distance_s = my_calloc(sizeof(*Distance_s),Ngal_s);
-  AngDiam_Distance = my_calloc(sizeof(*AngDiam_Distance),Ngal_s);
   X_s        = my_calloc(sizeof(*X_s),Ngal_s);
   Y_s        = my_calloc(sizeof(*Y_s),Ngal_s);
   Z_s        = my_calloc(sizeof(*Z_s),Ngal_s);
@@ -266,8 +264,7 @@ int main(int argc, char *argv[])
   for(i=0;i<Ngal_s;i++) {
     gsl_integration_qags (&F, 0, Redshift_s[i], 0, 1e-7, 1000,
 			  w, &result, &error);
-    Distance_s[i]=result;
-    AngDiam_Distance[i]=Distance_s[i]/(1. + Redshift_s[i]); 
+    Distance_s[i]=result; 
    if(Redshift_s[i] < Minimum_Redshift) {
       Distance_to_Near_Z=Distance_s[i];		
       Minimum_Redshift=Redshift_s[i];
