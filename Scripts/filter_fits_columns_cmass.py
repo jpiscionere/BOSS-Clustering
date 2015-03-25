@@ -10,8 +10,8 @@
 
 import pyfits
 import numpy as np 
-#from astropy.cosmology import FLRWCosmology
-#cosmo=FLRWCosmology(H0=100,Om=0.3,Ol=0.7)
+from astropy.cosmology import FlatLambdaCDM
+cosmo=FlatLambdaCDM(H0=100,Om0=0.266)
 
 ## Read in the fits file
 hdulist = pyfits.open('/hd0/Research/Clustering/Boss/dr11/dr11v2/cmass-dr11v2-N-Anderson.dat.fits')
@@ -55,11 +55,11 @@ d_perp_cut=0.55
 weight_cp=table.field('WEIGHT_CP')
 icollided=table.field('ICOLLIDED')
 
-#distance_modulus=5.0*np.log10(cosmo.luminosity_distace(redshift)) - 5 
+distance_modulus=cosmo.distmod(redshift)
+Mag_i=modelflux_i - distance_modulus - (-0.5)
 
 
-
-array=np.column_stack((ra,dec,redshift,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i))
+array=np.column_stack((ra,dec,redshift,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
 np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n')
 
 ids=np.where(( modelflux_i > 17.5  ) & 
