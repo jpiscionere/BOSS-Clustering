@@ -81,8 +81,8 @@ path=('/hd0/Research/Clustering/Boss/dr11/dr11v2/')
 
 
 for x in range(0,3):
-	array_list=array[np.where((array[:,2] > bin[x]) & (array[:,2] < bin[x + 1]))]	
-	np.savetxt(str(path) + "bin" + str(x) + "selection.txt",array_list,delimiter='\t',newline='\n')
+	array_list=array_filter[np.where((array_filter[:,2] > bin[x]) & (array_filter[:,2] < bin[x + 1]))]	
+	np.savetxt(str(path) + "bin" + str(x+1) + "_selection.txt",array_list,delimiter='\t',newline='\n')
  		
 
 
