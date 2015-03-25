@@ -11,7 +11,7 @@
 import pyfits
 import numpy as np 
 ## Read in the fits file
-hdulist = pyfits.open('cmass-dr11v2-N-Anderson.dat.fits')
+hdulist = pyfits.open('/hd0/Research/Clustering/Boss/dr11/dr11v2/cmass-dr11v2-N-Anderson.dat.fits')
 
 
 ## Uncomment the following line to view the info about the table
@@ -24,7 +24,7 @@ table = hdulist[1].data
 ra=table.field('RA')
 dec=table.field('DEC')
 redshift=table.field('Z')
-
+polygon=table.field('IPOLY')
 extinction=table.field('EXTINCTION')
 
 extinction_g=extinction[:,1]
@@ -67,15 +67,22 @@ redshift_=redshift[ids]
 weight_cp_=modelflux_r[ids]
 modelflux_i_=modelflux_i[ids]
 modelflux_r_=modelflux_r[ids]
+redshift_=redshift[ids]
+polygon_=polygon[ids]
 
-array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
-np.savetxt('dr11v2_imaging.txt',array,delimiter='\t',newline='\n')
 
-array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
-array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
-array=np.column_stack((ra_,dec_,modelflux_i_,modelflux_r_))
+bin[0] = 0.43
+bin[1] = 0.5
+bin[2] = 0.55
+bin[3] = 0.6
+bin[4] = 0.7
 
-ra_test=ra_[np.where((redshift_ > 0.43) & (redshift_ < 0.5))]
+array=np.column_stack((ra_,dec_,polygon_,modelflux_i_,modelflux_r_))
+np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_imaging.txt',array,delimiter='\t',newline='\n')
+
+array=np.column_stack((ra_,dec_,redshift_,weight_cp_,polygon_))
+
+
 
 
  
