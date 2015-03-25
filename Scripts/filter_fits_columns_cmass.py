@@ -10,6 +10,9 @@
 
 import pyfits
 import numpy as np 
+#from astropy.cosmology import FLRWCosmology
+#cosmo=FLRWCosmology(H0=100,Om=0.3,Ol=0.7)
+
 ## Read in the fits file
 hdulist = pyfits.open('/hd0/Research/Clustering/Boss/dr11/dr11v2/cmass-dr11v2-N-Anderson.dat.fits')
 
@@ -52,9 +55,12 @@ d_perp_cut=0.55
 weight_cp=table.field('WEIGHT_CP')
 icollided=table.field('ICOLLIDED')
 
+#distance_modulus=5.0*np.log10(cosmo.luminosity_distace(redshift)) - 5 
 
 
-array=np.column_stack((ra,dec,redshift,polygon,modelflux_i,modelflux_r))
+
+array=np.column_stack((ra,dec,redshift,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i))
+np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n')
 
 ids=np.where(( modelflux_i > 17.5  ) & 
 	( modelflux_i < 19.9) & 
@@ -69,14 +75,14 @@ bin=(0.43,0.5,0.55,0.6,0.7)
 
 np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_imaging.txt',array_filter,delimiter='\t',newline='\n')
 
-array=np.column_stack((ra_,dec_,redshift_,weight_cp_,polygon_))
+
 
 path=('/hd0/Research/Clustering/Boss/dr11/dr11v2/')
 
 
 for x in range(0,3):
 	array_list=array[np.where((array[:,2] > bin[x]) & (array[:,2] < bin[x + 1]))]	
-	np.savetxt(str(path) + "bin" + str(x) + "selection.text",array_list,delimiter='\t',newline='\n')
+	np.savetxt(str(path) + "bin" + str(x) + "selection.txt",array_list,delimiter='\t',newline='\n')
  		
 
 
