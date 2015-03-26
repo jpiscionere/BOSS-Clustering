@@ -4,6 +4,7 @@ g_mod=data$V5
 r_mod=data$V6
 i_mod=data$V7
 i_fib=data$V8
+Mag_i=data$V9
 
 g_r=g_mod-r_mod
 r_i=r_mod-i_mod
@@ -32,3 +33,21 @@ z_dperp<-ggplot(data,aes(x=redshift,y=dperp)) + ylab("d_perp") + xlab("Redshift"
 
 z_dperp<- z_dperp + stat_density2d()
 z_dperp<- z_dperp + geom_hline(aes(yintercept=0.55))
+
+
+i_dperp<-ggplot(data,aes(x=i_mod,y=dperp)) + ylab("d_perp") + xlab("i_cmod") + geom_point(color="grey",alpha=0.1,shape=".") + theme_bw() + theme(axis.title.y=element_text(size=20,angle=90,face="italic"),axis.title.x=element_text(size=20,vjust=-0.2),axis.text=element_text(size=20),panel.border=element_rect(size=1.1),legend.position="none") + ylim(0.2,1.5)
+
+i_dperp<- i_dperp + stat_density2d()
+i_dperp<- i_dperp + geom_hline(aes(yintercept=0.55))
+
+
+icmod_cut=19.86+ 1.6*(d_perp - 0.8)
+
+
+m<-ggplot(data,aes(x=redshift,y=Mag_i)) +ylab(expression(paste(italic(M[i]))))+ xlab("Redshift") + ylim(-20,-24) + xlim(0.35,0.75) + geom_point(color="grey",alpha=0.1,shape=".") + theme_bw() + theme(axis.title.y=element_text(size=20,angle=90,face="italic"),axis.title.x=element_text(size=20,vjust=-0.2),axis.text=element_text(size=20),panel.border=element_rect(size=1.1),legend.position="none")
+
+m<- m + stat_density2d()
+
+
+
+
