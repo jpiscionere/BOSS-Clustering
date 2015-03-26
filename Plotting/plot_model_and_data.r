@@ -8,7 +8,7 @@ library("gplots")
 library('gridExtra')
 
 par(mfrow=c(2,2), mgp = c(1.5, 1, 0) ,mar=c(2.55, 3.25, 2.75, 1.5))
-ylims=c(30,5000)
+ylims=c(30,10000)
 
 #hong=read.table("cmassdr9_hong.dat")
 #hong_rp=hong$V1
@@ -32,16 +32,16 @@ box()
 
 errbar(wp$V1,wp$V2,wp$V2+wp$V4,wp$V2-wp$V4,log="xy",add=TRUE,col="deeppink")
 
-data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin1_wp_dr11v2_full_map_jack150_new_bins.out")
+data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin1_wp_nojack.out")
 wp=data.frame(data)
-points(V2~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
+points(V3~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
 
-data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/wp_bin1_imaging_test.out")
-lines(data$V1,data$V3,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
+#data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/wp_bin1_imaging_test.out")
+#lines(data$V1,data$V3,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
 
 
-names=c("0.43 < z < 0.5")
-colors=c("deeppink")
+names=c("0.43 < z < 0.5","No Jack")
+colors=c("deeppink","grey")
 legend("topright",names,col=colors,lty=1,pch=1,bty="n",cex=1.25)
 
 
@@ -74,14 +74,14 @@ box()
 errbar(wp$V1,wp$V2,wp$V2+wp$V4,wp$V2-wp$V4,log="xy",add=TRUE,col="dodgerblue")
 
 
-data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin2_wp_dr11v2_full_map_jack150_new_bins.out")
+data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin2_wp_nojack.out")
 wp=data.frame(data)
-points(V2~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
+points(V3~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
 
 
 
-names=c("0.5 < z < 0.55")
-colors=c("dodgerblue")
+names=c("0.5 < z < 0.55","No Jack")
+colors=c("dodgerblue","grey")
 legend("topright",names,col=colors,lty=1,pch=1,bty="n",cex=1.25)
 
 fibcol=6.344*62/1000
@@ -112,15 +112,15 @@ box()
 
 errbar(wp$V1,wp$V2,wp$V2+wp$V4,wp$V2-wp$V4,log="xy",add=TRUE,col="purple")
 
-data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin3_wp_dr11v2_full_map_jack150_new_bins.out")
+data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin3_wp_nojack.out")
 wp=data.frame(data)
-points(V2~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
+points(V3~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
 
 
 
 
-names=c("0.55 < z < 0.6")
-colors=c("purple")
+names=c("0.55 < z < 0.6","No Jack")
+colors=c("purple","grey")
 legend("topright",names,col=colors,lty=1,pch=1,bty="n",cex=1.25)
 
 fibcol=6.673*62/1000
@@ -149,14 +149,14 @@ box()
 
 errbar(wp$V1,wp$V2,wp$V2+wp$V4,wp$V2-wp$V4,log="xy",add=TRUE,col="seagreen2")
 
-data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin4_wp_dr11v2_full_map_jack150_new_bins.out")
+data=read.table("/hd0/Research/Clustering/Boss/dr11/dr11v2/bin4_wp_nojack.out")
 wp=data.frame(data)
-points(V2~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
+points(V3~V1,data=wp,log="xy",axes=FALSE,type="p",col="grey",ylim=ylims,xlab=NA,ylab=NA, cex.lab=1, cex.axis=3, cex.main=1.5, cex.sub=1.5)
 
 
 
-names=c("0.6 < z < 0.7")
-colors=c("seagreen2")
+names=c("0.6 < z < 0.7","No Jack")
+colors=c("seagreen2","grey")
 legend("topright",names,col=colors,lty=1,pch=1,bty="n",cex=1.25)
 
 
