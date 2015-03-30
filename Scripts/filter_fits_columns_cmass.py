@@ -80,16 +80,16 @@ np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_imaging.txt',array_
 path=('/hd0/Research/Clustering/Boss/dr11/dr11v2/')
 
 
-for x in range(0,4):
+for x in range(0,5):
 	array_list=array_filter[np.where((array_filter[:,2] > bin[x]) & (array_filter[:,2] < bin[x + 1]))]	
 	np.savetxt(str(path) + "bin" + str(x+1) + "_selection.txt",array_list,delimiter='\t',newline='\n')
 
 
-array_output=array_filter[:,range(0,4)]
+array_output=array_filter[:,range(0,5)]
 
 np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/Di.dr11v2.out.selection',array_output,delimiter='\t',newline='\n')
 
 
-for x in range(0,4):
+for x in range(0,5):
         array_list=array_output[np.where((array_filter[:,2] > bin[x]) & (array_filter[:,2] < bin[x + 1]))]
         np.savetxt(str(path) + "bin" + str(x+1) + "_Ds_dr11v2_selection.out",array_list,delimiter='\t',newline='\n')
