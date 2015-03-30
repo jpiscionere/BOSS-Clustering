@@ -60,7 +60,10 @@ Mag_i=modelflux_i - distance_modulus - (-0.5)
 
 
 array=np.column_stack((ra,dec,redshift,weight_cp,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
-np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n')
+dimensions=str("ra dec redshift weight_cp polygon modelflux_g modelflux_r modelflux_i fiberflux_i distance_modulus Mag_i")
+
+
+np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n',header=str(dimensions),comments=' ')
 
 ids=np.where(( modelflux_i > 17.5  ) & 
 	( modelflux_i < 19.9) & 
