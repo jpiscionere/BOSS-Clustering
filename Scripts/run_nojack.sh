@@ -4,17 +4,17 @@ path=/hd0/Research/Clustering/Boss/dr11/dr11v2
 imaging_randoms=$path/Ri.dr11v2.out
 mask=$path/mask-cmass-dr11v2-N-Anderson.ply
 area_tot=2.050670
-imaging_data=$path/Di.dr11v2.out
+imaging_data=$path/Di.dr11v2_selection.out
 
 nbins=20
 r_min=0.01
 
 
-for bin in bin1 bin2 bin3 bin4 bin_all
+for bin in bin1 bin2 bin3 bin4 
 do
 
 
-data=$path/${bin}_Ds_dr11v2.out
+data=$path/${bin}_Ds_dr11v2_selection.out
 randoms=$path/${bin}_Rs_dr11v2.out
 
 
