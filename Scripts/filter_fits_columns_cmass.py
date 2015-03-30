@@ -59,7 +59,7 @@ distance_modulus=cosmo.distmod(redshift)
 Mag_i=modelflux_i - distance_modulus - (-0.5)
 
 
-array=np.column_stack((ra,dec,redshift,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
+array=np.column_stack((ra,dec,redshift,weight_cp,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
 np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n')
 
 ids=np.where(( modelflux_i > 17.5  ) & 
@@ -83,7 +83,6 @@ path=('/hd0/Research/Clustering/Boss/dr11/dr11v2/')
 for x in range(0,3):
 	array_list=array_filter[np.where((array_filter[:,2] > bin[x]) & (array_filter[:,2] < bin[x + 1]))]	
 	np.savetxt(str(path) + "bin" + str(x+1) + "_selection.txt",array_list,delimiter='\t',newline='\n')
- 		
 
 
- 
+
