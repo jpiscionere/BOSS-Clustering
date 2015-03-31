@@ -29,6 +29,9 @@ dec=table.field('DEC')
 redshift=table.field('Z')
 polygon=table.field('IPOLY')
 extinction=table.field('EXTINCTION')
+frac=table.field('FRACPSF')
+exponential_flux=table.field('EXPFLUX')
+dev_flux=table.field('DEVFLUX')
 
 extinction_g=extinction[:,1]
 extinction_r=extinction[:,2]
@@ -37,6 +40,8 @@ extinction_i=extinction[:,3]
 fiberflux=table.field('FIBER2FLUX')
 fiberflux_i= 22.5-2.5*np.log10(fiberflux[:,3]) - extinction_i
 
+f_i_cmod=(1 - frac[:,3])*exponential_flux[:,3] + frac[:,3]*dev_flux[:,3]
+i_cmod=22.5-2.5*np.log10(f_i_cmod) - extinction_i
 
 modelflux=table.field('MODELFLUX')
 modelflux_g= 22.5-2.5*np.log10( modelflux[:,1]) - extinction_g
@@ -59,18 +64,21 @@ distance_modulus=cosmo.distmod(redshift)
 Mag_i=modelflux_i - distance_modulus - (-0.5)
 
 
-array=np.column_stack((ra,dec,redshift,weight_cp,polygon,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
-dimensions=str("ra dec redshift weight_cp polygon modelflux_g modelflux_r modelflux_i fiberflux_i distance_modulus Mag_i")
+array=np.column_stack((ra,dec,redshift,weight_cp,polygon,i_cmod,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
+dimensions=str("ra dec redshift weight_cp polygon i_cmod modelflux_g modelflux_r modelflux_i fiberflux_i distance_modulus Mag_i")
 
 
 np.savetxt('/hd0/Research/Clustering/Boss/dr11/dr11v2/dr11v2_all.out',array,delimiter='\t',newline='\n',header=str(dimensions),comments=' ')
 
-ids=np.where(( modelflux_i > 17.5  ) & 
-	( modelflux_i < 19.9) & 
+
+#this really isn't necessary but it's here anyway
+
+ids=np.where(( i_cmod > 17.5  ) & 
+	( i_cmod < 19.9) & 
 	( modelflux_r -  modelflux_i < 2 ) & 
 	( d_perp > d_perp_cut) & 
 	( fiberflux_i < 21.5 ) &
-	( modelflux_i < i_cmod_cut))
+	( i_cmod < i_cmod_cut))
 
 array_filter=array[ids]
 
