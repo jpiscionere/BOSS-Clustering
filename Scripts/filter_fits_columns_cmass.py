@@ -61,7 +61,7 @@ weight_cp=table.field('WEIGHT_CP')
 icollided=table.field('ICOLLIDED')
 
 distance_modulus=cosmo.distmod(redshift)
-Mag_i=modelflux_i - distance_modulus - (-0.5)
+Mag_i=i_cmod - distance_modulus - (-0.5)
 
 
 array=np.column_stack((ra,dec,redshift,weight_cp,polygon,i_cmod,modelflux_g,modelflux_r,modelflux_i,fiberflux_i,distance_modulus,Mag_i))
