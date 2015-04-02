@@ -1,15 +1,18 @@
 #! /bin/bash
-#mask=/hd0/Research/Clustering/Boss/dr11/dr11v2/allsky.pol
+
+area_tot=12.56637
+r_min=0.01
+r_max=10
+n_bins=20
 mask=/hd0/Research/Clustering/Boss/dr11/dr11v2/mask-cmass-dr11v2-N-Anderson.ply
 bin=data_sphere_test
-#time measure_Boss_wp random_mock_test random_mock_test_imaging $mask outfile_RsRi_$bin 0.01 10 20 100 2 >${bin}_RsRi_with_norm.out &
 Rs=/hd0/Research/Clustering/Boss/Mock_Test/Rs_0
 Ri=/hd0/Research/Clustering/Boss/Mock_Test/Ri_0
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojackopenmp $Rs $Ri 0.01 10 20 2 > RsRi_nojack.out.littleh & 
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Ri $r_min $r_max $n_bins 2 $area_tot > RsRi_nojack.out & 
 
 
 
-for i in $(seq 2021 1 2031)
+for i in $(seq $n_bins21 1 $n_bins21)
 do
 
 galaxy_file=boss_mock_$i.sphere.galaxies
@@ -26,7 +29,7 @@ awk '{print $1,$2,1.0}' <$galaxy_file > boss_imaging_test_$i.out
 Ds=boss_data_test_$i.out
 Di=boss_imaging_test_$i.out
 
-#R=`echo "$i - 2021" | bc -l `
+#R=`echo "$i - $n_bins21" | bc -l `
 
 #Rs=/hd0/Research/Clustering/Boss/Mock_Test/Rs_$R
 #Ri=/hd0/Research/Clustering/Boss/Mock_Test/Ri_$R
@@ -34,16 +37,16 @@ Di=boss_imaging_test_$i.out
 
 
 #done
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Di 0.01 10 20 1 > ${i}_DsDi_nojack.out.littleh &
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Ri 0.01 10 20 2 > ${i}_DsRi_nojack.out.littleh &
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Di 0.01 10 20 1 > ${i}_RsDi_nojack.out.littleh &
-#/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri 0.01 10 20 2 > RsRi_nojack.out.new_norm & 
-#/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri 0.01 10 20 1 > RsRi_nojack.out & 
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_DsDi_nojack.out &
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Ri $r_min $r_max $n_bins 2 $area_tot > ${i}_DsRi_nojack.out &
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_RsDi_nojack.out &
+#/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri $r_min $r_max $n_bins 2 > RsRi_nojack.out.new_norm & 
+#/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri $r_min $r_max $n_bins 1 > RsRi_nojack.out & 
 
-#time /home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp $Ds $Di $mask outfile_DsDi_$i 0.01 10 20 100 1 >${i}_DsDi_with_norm.out &
-#time measure_Boss_wp $Ds $Ri $mask outfile_DsRi_$i 0.01 10 20 100 2 >${i}_DsRi_with_norm.out &
-#time measure_Boss_wp $Rs $Di $mask outfile_RsDi_$i 0.01 10 20 100 1 >${i}_RsDi_with_norm.out & 
-#time measure_Boss_wp boss_random_data_test.out /hd0/Research/Clustering/Boss/dr11/dr11v2/Ri.dr11v2.out $mask outfile_RsRi_$bin 0.01 10 20 100 2 >${bin}_RsRi_with_norm.out &
+#time /home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp $Ds $Di $mask outfile_DsDi_$i $r_min $r_max $n_bins $r_max0 1 >${i}_DsDi_with_norm.out &
+#time measure_Boss_wp $Ds $Ri $mask outfile_DsRi_$i $r_min $r_max $n_bins $r_max0 2 >${i}_DsRi_with_norm.out &
+#time measure_Boss_wp $Rs $Di $mask outfile_RsDi_$i $r_min $r_max $n_bins $r_max0 1 >${i}_RsDi_with_norm.out & 
+#time measure_Boss_wp boss_random_data_test.out /hd0/Research/Clustering/Boss/dr11/dr11v2/Ri.dr11v2.out $mask outfile_RsRi_$bin $r_min $r_max $n_bins $r_max0 2 >${bin}_RsRi_with_norm.out &
 
 done
 
