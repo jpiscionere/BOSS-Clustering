@@ -8,11 +8,11 @@ mask=/hd0/Research/Clustering/Boss/dr11/dr11v2/mask-cmass-dr11v2-N-Anderson.ply
 bin=data_sphere_test
 Rs=/hd0/Research/Clustering/Boss/Mock_Test/Rs_0
 Ri=/hd0/Research/Clustering/Boss/Mock_Test/Ri_0
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Ri $r_min $r_max $n_bins 2 $area_tot > RsRi_nojack.out & 
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Ri $r_min $r_max $n_bins 2 $area_tot > RsRi_nojack.out  
 
 
 
-for i in $(seq $n_bins21 1 $n_bins21)
+for i in $(seq 2021 1 2031)
 do
 
 galaxy_file=boss_mock_$i.sphere.galaxies
@@ -37,9 +37,9 @@ Di=boss_imaging_test_$i.out
 
 
 #done
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_DsDi_nojack.out &
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Ri $r_min $r_max $n_bins 2 $area_tot > ${i}_DsRi_nojack.out &
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_RsDi_nojack.out &
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_DsDi_nojack.out 
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Ds $Ri $r_min $r_max $n_bins 2 $area_tot > ${i}_DsRi_nojack.out 
+/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Di $r_min $r_max $n_bins 1 $area_tot > ${i}_RsDi_nojack.out 
 #/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri $r_min $r_max $n_bins 2 > RsRi_nojack.out.new_norm & 
 #/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack $Rs $Ri $r_min $r_max $n_bins 1 > RsRi_nojack.out & 
 
