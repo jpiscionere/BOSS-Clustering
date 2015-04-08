@@ -8,7 +8,7 @@ mask=/hd0/Research/Clustering/Boss/dr11/dr11v2/mask-cmass-dr11v2-N-Anderson.ply
 bin=data_sphere_test
 Rs=/hd0/Research/Clustering/Boss/Mock_Test/Rs_0
 Ri=/hd0/Research/Clustering/Boss/Mock_Test/Ri_0
-/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Ri $r_min $r_max $n_bins 2 $area_tot > RsRi_nojack.out  
+#/home/piscioja/Clustering/Boss/Source/Vpac_Codes/measure_Boss_wp_nojack_openmp $Rs $Ri $r_min $r_max $n_bins 2 $area_tot > RsRi_nojack.out  
 
 
 
