@@ -41,13 +41,13 @@ cols=gg_color_hue(4)
 
 
 
-gr_ri_bin1<- gr_ri + stat_smooth(data=subset(frame,bin=="Bin1"),aes(fill=bin,col=cols[1]),show_guide=FALSE)
-gr_ri_bin2<- gr_ri + stat_smooth(data=subset(frame,bin=="Bin2"),aes(fill=bin,col=cols[2]),show_guide=FALSE)
-gr_ri_bin3<- gr_ri + stat_smooth(data=subset(frame,bin=="Bin3"),aes(fill=bin,col=cols[3]),show_guide=FALSE)
-gr_ri_bin4<- gr_ri + stat_smooth(data=subset(frame,bin=="Bin4"),aes(fill=bin,col=cols[4]),show_guide=FALSE)
+gr_ri_bin1<- gr_ri + stat_density2d(data=subset(frame,bin=="Bin1"),colour=cols[1],show_guide=FALSE)
+gr_ri_bin2<- gr_ri + stat_density2d(data=subset(frame,bin=="Bin2"),colour=cols[2],show_guide=FALSE)
+gr_ri_bin3<- gr_ri + stat_density2d(data=subset(frame,bin=="Bin3"),colour=cols[3],show_guide=FALSE)
+gr_ri_bin4<- gr_ri + stat_density2d(data=subset(frame,bin=="Bin4"),colour=cols[4],show_guide=FALSE)
  
 
-grid.arrange(gr_ri_bin1 + theme(plot.margin=unit(c(0,1,0.5,2),"cm")),gr_ri_bin2,gr_ri_bin3,gr_ri_bin4)
+grid.arrange(gr_ri_bin1,gr_ri_bin2,gr_ri_bin3,gr_ri_bin4)
 
 grid.arrange(gr_ri + theme(plot.margin=unit(c(0,1,0.5,2),"cm")),i_dperp + theme(plot.margin=unit(c(0,-1,0.5,0.5),"cm")),nrow=2,ncol=2)
 
