@@ -66,12 +66,12 @@ halobias_fof_nfw_quiet	 3 4 1 $logMmin $siglogM $logM0 $logM1 $alpha 1 $gamma $f
 	then
 		tagfibcol=$tag.fibcol
 		echo "......................Adding Fiber Collisions"
-		IDfib 0 1 162.0 boss_mock_$i.$tag.galaxies > tmp.$i
+		IDfib 0 1 62.0 boss_mock_$i.$tag.galaxies > tmp.$i
 #		awk '{if($4==-1){print $1,$2,$3} else {print $1,$2,$4}}' <tmp.$i >boss_mock_$i.$tag.galaxies
 		awk '{if($4==-1){print $1,$2,$3}}' <tmp.$i >boss_mock_$i.$tagfibcol.galaxies
 	fi	
 
-DDrppi 0.01 10 20 boss_mock_$i.$tag.galaxies a boss_mock_$i.$tag.galaxies a 500 >DD_$tag.$i  
+#DDrppi 0.01 10 20 boss_mock_$i.$tag.galaxies a boss_mock_$i.$tag.galaxies a 500 >DD_$tag.$i  
 
 rm -r output_$trim.$i 
 
@@ -81,18 +81,18 @@ rm -r output_$trim.$i
 
 #./data_wp/DDrppi 0.01 10 10 /hd0/Research/Clustering/Boss/dr11/dr11v2/rands_for_mock_test /hd0/Research/Clustering/Boss/dr11/dr11v2/rands_for_mock_test 40 >RR_$tag 
 
-Rand_file=/hd0/Research/Clustering/Boss/Mock_Test/Randoms_$tag
-NR1=`wc -l $Rand_file | cut -f1 -d' '`
-echo "$NR1 Number of Randoms Galaxies Used"
+#Rand_file=/hd0/Research/Clustering/Boss/Mock_Test/Randoms_$tag
+#NR1=`wc -l $Rand_file | cut -f1 -d' '`
+#echo "$NR1 Number of Randoms Galaxies Used"
 
 #DDrppi 0.01 10 20 $Rand_file $Rand_file 40 >RR_$tag 
 
-echo "$NR1 Number of Randoms Used"
+#echo "$NR1 Number of Randoms Used"
 #for i in $(seq 2021 1 2031)
 
 #do
 
-DDrppi 0.01 10 20 boss_mock_$i.$tag.galaxies a $Rand_file a 500  >D_$tag.${i}.R_$tag 
+#DDrppi 0.01 10 20 boss_mock_$i.$tag.galaxies a $Rand_file a 500  >D_$tag.${i}.R_$tag 
 
 
 #done
@@ -102,11 +102,11 @@ DDrppi 0.01 10 20 boss_mock_$i.$tag.galaxies a $Rand_file a 500  >D_$tag.${i}.R_
 #for i in $(seq 2021 1 2031)
 #do
 
-ND1=`wc -l boss_mock_$i.$tag.galaxies | cut -f1 -d' '`
+#ND1=`wc -l boss_mock_$i.$tag.galaxies | cut -f1 -d' '`
 
-echo "wprp 20 $ND1 $ND1 $NR1 $NR1 DD_$tag.$i D_$tag.${i}.R_$tag D_$tag.${i}.R_$tag RR_$tag 40 >wprp_$i.$tag.$fibcol.out"
+#echo "wprp 20 $ND1 $ND1 $NR1 $NR1 DD_$tag.$i D_$tag.${i}.R_$tag D_$tag.${i}.R_$tag RR_$tag 40 >wprp_$i.$tag.$fibcol.out"
 
-wprp 20 $ND1 $ND1 $NR1 $NR1 DD_$tag.$i D_$tag.${i}.R_$tag D_$tag.${i}.R_$tag RR_$tag 500 >test_$i.$tag.$fibcol.out.test 
+#wprp 20 $ND1 $ND1 $NR1 $NR1 DD_$tag.$i D_$tag.${i}.R_$tag D_$tag.${i}.R_$tag RR_$tag 500 >test_$i.$tag.$fibcol.out.test 
 
 #rm boss_mock_$i.$tag.galaxies
 #done
