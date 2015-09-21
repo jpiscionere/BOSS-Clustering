@@ -68,8 +68,8 @@ array=array[ (array[:,2] > 0.43) & (array[:,2] < 0.55)  ]
 
 nden_target=0.00013
 
-max_volume=astropy.cosmology.funcs.luminosity_distance(np.max(array[:,2]))
-min_volume=astropy.cosmology.funcs.luminosity_distance(np.min(array[:,2]))
+max_volume=4./3. * np.pi * astropy.cosmology.comoving_distance(np.max(array[:,2]))**3
+min_volume=4./3. * np.pi * astropy.cosmology.comoving_distance(np.min(array[:,2]))**3
 
 volume=max_volume-min_volume
 
