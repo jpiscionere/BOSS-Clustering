@@ -63,7 +63,7 @@ flux_r=flux[:,3]
 
 M_g=Calculate_Magnitude(flux_r,extinction_r,redshift)
 
-array=np.column_stack((ra,dec,redshift,fibcol,poly,sector,flux_r,extinction_r,M_g))
+array=np.column_stack((ra,dec,redshift,fibcol,poly,sector,M_g))
 array=array[ (array[:,2] > 0.43) & (array[:,2] < 0.55)  ]
 
 nden_target=0.00013
@@ -75,9 +75,11 @@ volume=max_volume-min_volume
 
 number_of_galaxies=nden_target*volume
 
-final_array=array[array[:,8].argsort()[::-1][:number_of_galaxies]]
+#final_array=array[array[:,6].argsort()[::-1][:number_of_galaxies]]
+#Magnitudes are Negative Goddammit
+final_array=array[array[:,6].argsort()[:][:number_of_galaxies]]
 
-np.savetxt('nden_matched_array.txt',array,delimiter='\t',newline='\n')
+np.savetxt('nden_matched_array.txt',final_array,delimiter='\t',newline='\n')
 
 
 
