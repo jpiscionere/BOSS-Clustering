@@ -12,7 +12,8 @@ import pyfits
 import numpy as np 
 import astropy
 from astropy import cosmology
-
+from astropy.cosmology import get_current
+from astropy.cosmology import LambdaCDM
 
 def Calculate_Magnitude( flux_r, extinction, redshift):
 	#Calculate apparent magnitude
@@ -29,7 +30,7 @@ def Calculate_Magnitude( flux_r, extinction, redshift):
 
 	#Distance Modulus
 
-	DM=astropy.cosmology.distmod(redshift)
+	DM=cosmo.distmod(redshift)
 
 	#Calculate Absolute Magnitude
 
@@ -43,12 +44,12 @@ hdulist = pyfits.open('/hd0/Research/Clustering/Boss/dr11/dr11v2/cmass-dr11v2-N-
 
 
 ## Uncomment the following line to view the info about the table
-print hdulist.info()
+#print hdulist.info()
 
 ## Read the tabular portion of the fits file into the variable 'table'.  This assumes that the table of interest is located in extension 1 
 table = hdulist[1].data
 
-
+cosmo = LambdaCDM(H0=100, Om0=0.274, Ode0=0.726)
 
 ra=table.field('RA')
 dec=table.field('DEC')
@@ -68,23 +69,25 @@ array=array[ (array[:,2] > 0.43) & (array[:,2] < 0.55)  ]
 
 nden_target=0.00013
 
-max_volume=4./3. * np.pi * astropy.cosmology.comoving_distance(np.max(array[:,2]))**3
-min_volume=4./3. * np.pi * astropy.cosmology.comoving_distance(np.min(array[:,2]))**3
+big_distance=cosmo.comoving_distance(np.max(array[:,2]))
+small_distance=cosmo.comoving_distance(np.min(array[:,2]))
+
+print np.min(array[:,2]), small_distance,np.max(array[:,2]),  big_distance
+
+max_volume=4./3. * np.pi * cosmo.comoving_distance(np.max(array[:,2]))**3
+min_volume=4./3. * np.pi * cosmo.comoving_distance(np.min(array[:,2]))**3
 
 volume=max_volume-min_volume
 
+print volume
+
 number_of_galaxies=nden_target*volume
+
+print number_of_galaxies
 
 #final_array=array[array[:,6].argsort()[::-1][:number_of_galaxies]]
 #Magnitudes are Negative Goddammit
 final_array=array[array[:,6].argsort()[:][:number_of_galaxies]]
 
-np.savetxt('nden_matched_array.txt',final_array,delimiter='\t',newline='\n')
 
-
-
-
-
-
-
-             
+np.savetxt('nden_matched_array.txt',final_array,delimiter='\t',newline='\n') 
