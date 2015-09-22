@@ -64,30 +64,33 @@ flux_r=flux[:,3]
 
 M_g=Calculate_Magnitude(flux_r,extinction_r,redshift)
 
-array=np.column_stack((ra,dec,redshift,fibcol,poly,sector,M_g))
+array=np.column_stack((ra,dec,redshift,fibcol,poly,M_g))
 array=array[ (array[:,2] > 0.43) & (array[:,2] < 0.55)  ]
 
 nden_target=0.00013
+sky_coverage=2.036048 #in rad
+percent_sky=sky_coverage / ( 4 * np.pi )
+
 
 big_distance=cosmo.comoving_distance(np.max(array[:,2]))
 small_distance=cosmo.comoving_distance(np.min(array[:,2]))
 
-print np.min(array[:,2]), small_distance,np.max(array[:,2]),  big_distance
+
 
 max_volume=4./3. * np.pi * cosmo.comoving_distance(np.max(array[:,2]))**3
 min_volume=4./3. * np.pi * cosmo.comoving_distance(np.min(array[:,2]))**3
 
-volume=max_volume-min_volume
+volume= percent_sky * (max_volume-min_volume)
 
-print volume
+
 
 number_of_galaxies=nden_target*volume
 
 print number_of_galaxies
 
-#final_array=array[array[:,6].argsort()[::-1][:number_of_galaxies]]
+#final_array=array[array[:,5].argsort()[::-1][:number_of_galaxies]]
 #Magnitudes are Negative Goddammit
-final_array=array[array[:,6].argsort()[:][:number_of_galaxies]]
+final_array=array[array[:,5].argsort()[:][:number_of_galaxies]]
 
 
-np.savetxt('nden_matched_array.txt',final_array,delimiter='\t',newline='\n') 
+np.savetxt('nden_matched_array.txt',final_array,fmt="%lf %lf %lf %d %d %lf", delimiter='\t',newline='\n') 
