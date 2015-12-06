@@ -22,7 +22,7 @@ Notes:
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_interp.h>
 #include <string.h>
-
+#include <stdint.h>
 #include "cellarray.h"
 
 #include "utils.h"
@@ -101,7 +101,9 @@ int main(int argc, char *argv[])
     *Weight_s, /*The Fiber Collision or Completeness Weight of The Galaxy/Randoms */	
     *Distance_s,
     *Distance_Modulus,
-    logLuminosityDistance_s;
+    logLuminosityDistance_s,
+    Magnitude_Big=-22.8,
+    Magnitude_Small=-18.9;
 
   double	*X_s,*Y_s,*Z_s; /*The cartesian elements to calculate cos_Theta*/
   double area_tot=4*PI;
@@ -135,6 +137,7 @@ int main(int argc, char *argv[])
   int	Ngal_s=0; /*Number of Galaxies/Randoms in the Spectro Sample */
   int 	Ngal_i=0; /*Number of Galaxies/Randoms in the Imagin Sample */
   /* void gridlink1D(int np,double rmin,double rmax,double rcell,double *z,int *ngrid,int **gridinit,int **gridlist); */
+  fprintf(stderr,"BOSS Wp > Using gridlink with mag, make sure you're using the correct gridlink!!\n");
   void gridlink1D_with_struct(int np,double dmin,double dmax,double rcell,double *x1,double *y1,double *z1,double *dec, double *mag, int *ngrid,cellarray **lattice);
 
   struct timeval t0,t1;
@@ -150,9 +153,10 @@ int main(int argc, char *argv[])
   sscanf(argv[4],"%lf",&Max_Separation);
   sscanf(argv[5],"%d",&N_Bins);
   sscanf(argv[6],"%d",&Normalization_Choice);
-  
-  if(argc > 6)
-	sscanf(argv[7],"%lf",&area_tot) ;
+  sscanf(argv[7],"%lf",&Magnitude_Big); 
+  sscanf(argv[8],"%lf",&Magnitude_Small); 
+  if(argc > 8)
+	sscanf(argv[9],"%lf",&area_tot) ;
 
   if(Normalization_Choice==1){
 	fprintf(stderr,"BOSS Wp > Using Data Imaging Catalogue with Magnitude Cuts.\n");
@@ -331,7 +335,7 @@ int main(int argc, char *argv[])
 	}
     mean_distance+=Distance_s[i];
     logLuminosityDistance_s=log10(Distance_s[i]*1e6*(1+Redshift_s[i]));
-    Distance_Modulus[i]=5.0*logLuminosityDistance_s - 5 + Mag_Correction[i] + z_calibration;
+    Distance_Modulus[i]=5.0*logLuminosityDistance_s - 5 + Mag_Correction[i] + z_calibration - 0.8;
 
 
 
@@ -345,7 +349,7 @@ int main(int argc, char *argv[])
 //   fprintf(stderr," %lf %lf %lf %lf\n",RA_s[i],Dec_s[i],logLuminosityDistance_s,Redshift_s[i]); 
  }
 
-  fprintf(stderr,"Min DistMod = %lf Max DistMod = %lf\n",distance_modulus_min,distance_modulus_max);
+//  fprintf(stderr,"Min DistMod = %lf Max DistMod = %lf\n",distance_modulus_min,distance_modulus_max);
 
   if(Normalization_Choice==2){
 	fprintf(stderr,"BOSS Wp > Not using Mag Cuts for Imaging Randoms, Setting Distance Modulus to 0.\n");
@@ -412,7 +416,7 @@ int main(int argc, char *argv[])
 	nitems=3;
 	while(fgets(buffer,MAXBUFSIZE,fp2)!=NULL) {
         	nread = sscanf(buffer,"%lf %lf %d ",&RA_i[i],&Dec_i[i],&trash_d);	
-		mag_r[i]=-22.2; //Setting mag_r by hand so it passes the Mag_G if condition in the main loop
+		mag_r[i]=Magnitude_Small; //Setting mag_r by hand so it passes the Mag_G if condition in the main loop
 		if(nread == nitems) {
                         i++;
                         if(i==Imaging_Size) {
@@ -519,12 +523,15 @@ int main(int argc, char *argv[])
   /* int *imaging; */
   cellarray *cellstruct __attribute__((aligned(ALIGNMENT)));
 
+	
+
   int xx=0;
   for(i=0;i<ngrid;i++)
     xx+= lattice[i].nelements;
 
   if(xx!=Ngal_i) {
-    fprintf(stderr,"ERROR: xx=%d is not equal to Ngal_i=%d\n",xx,Ngal_i);
+    fprintf(stderr,"Gridlink ERROR: xx=%d is not equal to Ngal_i=%d\n",xx,Ngal_i);
+    fprintf(stderr,"Check how many inputs you have to the gridlink function\n");
     exit(EXIT_FAILURE);
   }
     
@@ -534,7 +541,7 @@ int main(int argc, char *argv[])
   DD    = my_calloc(sizeof(*DD),N_Bins);
 
   double DD_threads[N_Bins][nthreads];
-  int mag_counts_high[nthreads],mag_counts_low[nthreads];
+  double mag_counts_high[nthreads],mag_counts_low[nthreads];
 
   for(i=0;i<N_Bins;i++) {
     for(j=0;j<nthreads;j++) {
@@ -555,7 +562,7 @@ int main(int argc, char *argv[])
   int interrupted=0; 
   init_my_progressbar(Ngal_s,&interrupted);
 /* #pragma omp parallel shared(Dec_s,Weight_s,X_s,Y_s,Z_s,chunk) private(cos_Theta,ispectro,icen,icell,rp_sqr,bin,x1,y1,z1,imaging,cellstruct) */
-#pragma omp parallel default(none) shared(interrupted,stderr,counter,Ngal_s,Dec_s,Weight_s,Distance_Modulus,z_calibration,X_s,Y_s,Z_s,chunk,ngrid,dmin,inv_dmax_diff,Maximum_Dec_Separation,Distance_s,inv_start_bin_sqr,max_sep_sqr,inv_log_bin_size,start_bin_sqr,DD_threads,mag_counts_high,mag_counts_low,lattice) 
+#pragma omp parallel default(none) shared(interrupted,stderr,counter,Magnitude_Big,Magnitude_Small,Ngal_s,Dec_s,Weight_s,Distance_Modulus,z_calibration,X_s,Y_s,Z_s,chunk,ngrid,dmin,inv_dmax_diff,Maximum_Dec_Separation,Distance_s,inv_start_bin_sqr,max_sep_sqr,inv_log_bin_size,start_bin_sqr,DD_threads,mag_counts_high,mag_counts_low,lattice) 
   {
     int tid = omp_get_thread_num();
 #pragma omp for schedule(dynamic,chunk)
@@ -583,15 +590,17 @@ int main(int argc, char *argv[])
 	  int *imaging = cellstruct->index;
 	  for(int p=0;p<cellstruct->nelements;p++) {
 	    if(fabs(Dec_s[ispectro]-dec[p]) <= Maximum_Dec_Separation) {
-		double Magnitude=mag[p]-Distance_Modulus[ispectro]; /*Mag_G Sample Cut */
-		      double cos_Theta=X_s[ispectro] * x1[p] + Y_s[ispectro] * y1[p] + Z_s[ispectro] * z1[p];
+		double Magnitude=mag[p]-Distance_Modulus[ispectro];
+//		Magnitude=-22.0; /*Mag_G Sample Cut */
+//		fprintf(stderr,"%lf %lf %lf\n",Magnitude,mag[p],Distance_Modulus[ispectro]);      
+		double cos_Theta=X_s[ispectro] * x1[p] + Y_s[ispectro] * y1[p] + Z_s[ispectro] * z1[p];
 		      /* rp_sqr=4.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta)*0.5; /\* sin(arccos x) = sqrt(1-x^2) *\/ */
 	      		double rp_sqr=2.0*Distance_s[ispectro]*Distance_s[ispectro]*(1.0 - cos_Theta); /* sin(arccos x) = sqrt(1-x^2) */
 	      		if(rp_sqr < max_sep_sqr && rp_sqr >= start_bin_sqr) {
-				 if(Magnitude >= -23.2 && Magnitude < -21.2){
+				 if(Magnitude >=Magnitude_Big  && Magnitude <= Magnitude_Small){
 					int bin=(int)floor((0.5*log10(rp_sqr*inv_start_bin_sqr))*inv_log_bin_size);
 					DD_threads[bin][tid]+=Weight_s[ispectro]; //Put the Count in the Keeping Track Bin//
-				}else if(Magnitude < -23.2){
+				}else if(Magnitude < Magnitude_Big){
 					mag_counts_high[tid]++;
 				}else{
 					mag_counts_low[tid]++;
@@ -615,15 +624,15 @@ int main(int argc, char *argv[])
    tot_DD+=DD[i];	
   }
 
-  int tot_mag_counts_high=0,tot_mag_counts_low=0;
+  double tot_mag_counts_high=0,tot_mag_counts_low=0;
   for(i=0;i<nthreads;i++){
 	tot_mag_counts_high+=mag_counts_high[i];	
 	tot_mag_counts_low+=mag_counts_low[i];
 	}
   gettimeofday(&t1,NULL);
   fprintf(stderr,"BOSS Wp > Double loop time in main -> %6.2lf sec \n",ADD_DIFF_TIME(t0,t1));
-  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to high mag cuts = %d\n",tot_mag_counts_high);
-  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to low mag cuts = %d\n",tot_mag_counts_low);
+  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to high mag cuts = %lf\n",tot_mag_counts_high);
+  fprintf(stderr,"BOSS Wp > Number of pairs thrown out due to low mag cuts = %lf\n",tot_mag_counts_low);
   
   fprintf(stderr,"BOSS Wp > Number of total pairs=%lf\n",tot_DD); 
   /* #ifndef USE_AVX */
